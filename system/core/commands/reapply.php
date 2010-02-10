@@ -32,6 +32,7 @@ while ($db->next_database()) {
 
 		// Run the test method if there is one and we're meant to.
 		if ((bool) $params['run-tests'] AND method_exists($mig, 'test')) {
+			$mig->execute();
 			$mig->test();
 		}
 		unset($mig);

@@ -38,8 +38,12 @@ abstract class Migration {
 	}
 
 	public function execute() {
-		foreach ($this->tables as $table)
+		foreach ($this->tables as $id => $table) {
 			$table->execute();
+		}
+
+		// Don't execute twice.
+		$this->tables = array();
 	}
 
 	// Check we should run before passing to the subclass function.
