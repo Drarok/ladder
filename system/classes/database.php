@@ -133,4 +133,47 @@ class Database {
 			return FALSE;
 		};
 	}
+
+	public function get_migrations_table() {
+		static $table_name;
+
+		if (! (bool) $table_name) {
+			// Get the migrations table name from the config.
+			$table_name = Config::item('database.migrations_table', 'migrations');
+		}
+
+		return $table_name;
+	}
+
+	/**
+	 * Check that the migrations table exists. If not, create it.
+	 */
+	public function check_migrations_table() {
+		// Check the migrations table exists
+		$table_query = $this->query(
+			'SHOW TABLES LIKE \''.$this->get_migrations_table().'\'',
+			FALSE
+		);
+		
+		if (! (bool) mysql_num_rows($table_query)) {
+			$this->query(
+				'CREATE TABLE `'.$this->get_migrations_table().'` ('
+				.'`migration` int(11) NOT NULL default \'0\', '
+				.'`applied` datetime NOT NULL default \'0000-00-00 00:00:00\', '
+				.'UNIQUE KEY `migration` (`migration`)'
+				.') TYPE=MyISAM', FALSE
+			);
+		}
+	}
+
+	public function get_current_migration() {
+		// Find what the maximum migration is...
+		$migration_query = $this->query(
+			'SELECT MAX(`migration`) AS `migration` FROM `'
+			.$this->get_migrations_table().'`',
+			FALSE
+		);
+		$migration_result = mysql_fetch_object($migration_query);
+		return (int) $migration_result->migration;
+	}
 }

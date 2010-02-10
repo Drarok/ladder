@@ -13,6 +13,7 @@ $db = Database::factory();
 require_once($file);
 
 while ($db->next_database()) {
+	$db->check_migrations_table();
 	echo $db->name, '... ', "\n";;
 
 	echo "\t", 'Downgrading... ', "\n";
@@ -40,7 +41,11 @@ while ($db->next_database()) {
 
 	// Double-check that this migration is flagged as applied.
 	try {
-		$db->query(sprintf('INSERT INTO `migrations` SET `migration`=%d, `applied`=NOW()', (int) $num));
+		$db->query(sprintf(
+			'INSERT INTO `%s` SET `migration`=%d, `applied`=NOW()',
+			$db->get_migrations_table(),
+			(int) $num
+		));
 	} catch(Exception $e) {
 		// Squelch the error, as it's expected sometimes.
 	}

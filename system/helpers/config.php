@@ -12,8 +12,9 @@ class Config {
 		if (! array_key_exists($filename, self::$cache)) {
 			$file_path = APPPATH.'config/'.$filename.EXT;
 
-			if (! file_exists($file_path))
-				die(sprintf('Missing config file: "%s"', $file_path)."\n");
+			if (! file_exists($file_path)) {
+				throw new Exception(sprintf('Missing config file: "%s"', $file_path));
+			}
 
 			require_once(APPPATH.'config/'.$filename.EXT);
 
@@ -30,7 +31,9 @@ class Config {
 			}
 		}
 
-		return self::$cache[$filename][$key];
+		return array_key_exists($key, self::$cache[$filename])
+			? self::$cache[$filename][$key]
+			: $default;
 	}
 
 	public static function set_config($config) {

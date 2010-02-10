@@ -1,5 +1,10 @@
 <?php
 
+// Always check the directory exists.
+if (! is_dir(APPPATH.'migrations')) {
+	mkdir(APPPATH.'migrations');
+}
+
 // Find all the files we should work with.
 $files = glob(APPPATH.'migrations/*'.EXT);
 

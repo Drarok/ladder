@@ -6,14 +6,14 @@ final class Ladder {
 
 	public static $show_sql = FALSE;
 
-	const VERSION = '0.2.0';
+	const VERSION = '0.2.2';
 
 	public function __construct($migrate_to, $simulate = FALSE) {
 		$this->db = Database::factory();
 
 		while ($this->db->next_database()) {
+			$this->db->check_migrations_table();
 			try {
-				$this->check_migration_tables();
 				$this->migrate($migrate_to, $simulate);
 			} catch (Exception $e) {
 				echo "\nERROR: ", $e->getMessage(), "\n\n";
@@ -21,6 +21,10 @@ final class Ladder {
 		}
 	}
 
+	/**
+	 * Check the version is at least the passed-in one.
+	 * @param $version string Minimum version number required.
+	 */
 	public static function check_version_min($version) {
 		// If our version is less than the requested, throw an exception.
 		if (version_compare(self::VERSION, $version, '<')) {
@@ -32,54 +36,11 @@ final class Ladder {
 		}
 	}
 
-	protected function get_migrations_table() {
-		static $table_name;
-
-		if (! (bool) $table_name) {
-			// Get the migrations table name from the config.
-			$table_name = Config::item('database.migrations_table', 'migrations');
-		}
-
-		return $table_name;
-	}
-
-	/**
-	 * Check that the migrations table exists.
-	 */
-	protected function check_migration_tables() {
-		// Check the migrations table exists
-		$table_query = $this->db->query(
-			'SHOW TABLES LIKE \''.$this->get_migrations_table().'\'',
-			FALSE
-		);
-		
-		if (! (bool) mysql_num_rows($table_query)) {
-			$this->db->query(
-				'CREATE TABLE `'.$this->get_migrations_table().'` ('
-				.'`migration` int(11) NOT NULL default \'0\', '
-				.'`applied` datetime NOT NULL default \'0000-00-00 00:00:00\', '
-				.'UNIQUE KEY `migration` (`migration`)'
-				.') TYPE=MyISAM', FALSE
-			);
-		}
-	}
-
-	protected function get_current_migration() {
-		// Find what the maximum migration is...
-		$migration_query = $this->db->query(
-			'SELECT MAX(`migration`) AS `migration` FROM `'
-			.$this->get_migrations_table().'`',
-			FALSE
-		);
-		$migration_result = mysql_fetch_object($migration_query);
-		return (int) $migration_result->migration;
-	}
-
 	/**
 	 * Find all migrations that haven't been applied and run them.
 	 */
 	public function migrate($migrate_to, $simulate = FALSE) {
-		$current_migration = $this->get_current_migration();
+		$current_migration = $this->db->get_current_migration();
 
 		if ($migrate_to == $current_migration)
 			throw new Exception('Already at migration '.$migrate_to);
@@ -93,8 +54,10 @@ final class Ladder {
 		};
 
 		$migration_rows = self::select(
-			'SELECT `migration` from `'.$this->get_migrations_table()
-			.'` ORDER BY `migration`',
+			sprintf(
+				'SELECT `migration` from `%s` ORDER BY `migration`',
+				$this->db->get_migrations_table()
+			),
 			'migration'
 		);
 		$migration_files = glob(APPPATH.'migrations/*.php');
@@ -161,13 +124,13 @@ final class Ladder {
 				if ($method == 'up') {
 					$this->db->query(sprintf(
 						'INSERT INTO `%s` SET `migration`=%d, `applied`=NOW()',
-						$this->get_migrations_table(),
+						$this->db->get_migrations_table(),
 						$migration_id
 					));
 				} else {
 					$this->db->query(sprintf(
 						'DELETE FROM `%s` WHERE `migration`=%d',
-						$this->get_migrations_table(),
+						$this->db->get_migrations_table(),
 						$migration_id
 					));
 				}
