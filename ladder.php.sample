@@ -1,0 +1,23 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Set up these variables using forward-slashes (/) only.
+ * Absolute or relative paths should work fine.
+ * For Windows: 'C:/your/path/here'.
+ * For Unix: '/usr/local/path'.
+ */
+$application_path = '.';
+$system_path = 'system';
+
+$start_time = microtime(TRUE);
+
+define('DS', DIRECTORY_SEPARATOR);
+define('APPPATH', realpath($application_path).DS);
+define('SYSPATH', realpath($system_path).DS);
+define('EXT', '.php');
+
+require_once(SYSPATH.'core/bootstrap'.EXT);
+
+printf('Completed in %.3fs', microtime(TRUE) - $start_time);
+echo "\n";
