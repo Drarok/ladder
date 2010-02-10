@@ -5,6 +5,9 @@ if (! (bool) ini_get('short_open_tag')) {
 	die('Please enable PHP\'s short_open_tag option.');
 }
 
+// Set the version number.
+define('LADDER_VERSION', trim(file_get_contents(SYSPATH.'VERSION')));
+
 // Import all the other classes etc. Use autoload later?
 require_once(SYSPATH.'core/imports'.EXT);
 

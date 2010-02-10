@@ -6,8 +6,6 @@ final class Ladder {
 
 	public static $show_sql = FALSE;
 
-	const VERSION = '0.2.2';
-
 	public function __construct($migrate_to, $simulate = FALSE) {
 		$this->db = Database::factory();
 
@@ -27,11 +25,11 @@ final class Ladder {
 	 */
 	public static function check_version_min($version) {
 		// If our version is less than the requested, throw an exception.
-		if (version_compare(self::VERSION, $version, '<')) {
+		if (version_compare(LADDER_VERSION, $version, '<')) {
 			throw new Exception(sprintf(
 				'Failed version check. Required %s, but using %s.',
 				$version,
-				self::VERSION
+				LADDER_VERSION
 			));
 		}
 	}
