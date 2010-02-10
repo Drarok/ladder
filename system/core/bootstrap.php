@@ -8,6 +8,9 @@ if (! (bool) ini_get('short_open_tag')) {
 // Import all the other classes etc. Use autoload later?
 require_once(SYSPATH.'core/imports'.EXT);
 
+// Check we have the correct system version.
+Ladder::check_version_min('0.2.0');
+
 // Set up defaults for the command-line here.
 global $params;
 
