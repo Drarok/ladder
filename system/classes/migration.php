@@ -126,7 +126,7 @@ abstract class Migration {
 		$number = end($parts);
 
 		foreach ($this->import_data as $table) {
-			$filename = APPPATH.sprintf('migrations/data/%d_%s.csv', $number, $table);
+			$filename = APPPATH.sprintf('migrations/data/%s_%s.csv', $number, $table);
 			$this->table($table)->import_csv($filename);
 		}
 	}
