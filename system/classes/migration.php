@@ -85,8 +85,11 @@ abstract class Migration {
 	 * @param string $name Name of the new table to create.
 	 */
 	protected function create_table($name) {
-		$this->tables[] = $table = new Table($name, FALSE);
-		return $table;
+		if (array_key_exists($name, $this->tables)) {
+			throw new Exception('Table has already been created: '.$name);
+		}
+
+		return $this->tables[$name] = new Table($name, FALSE);
 	}
 
 	/**
@@ -95,8 +98,11 @@ abstract class Migration {
 	 * @param string $name Name of the table to open.
 	 */
 	protected function table($name) {
-		$this->tables[] = $table = new Table($name, TRUE);
-		return $table;
+		if (! array_key_exists($name, $this->tables)) {
+			$this->tables[$name] = new Table($name, TRUE);
+		}
+
+		return $this->tables[$name];
 	}
 
 	protected function drop_table($name) {
