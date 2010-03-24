@@ -166,6 +166,34 @@ class Table {
 	 * @return NULL
 	 */
 	public function execute() {
+		// Initialise to false, we need to see if there's work to do.
+		$todo = FALSE;
+
+		// Check the columns array first.
+		$check_keys = array('add', 'alter', 'drop');
+		foreach ($check_keys as $key) {
+			// If there's something to do, set the flag and break.
+			if ((bool) $this->columns[$key]) {
+				$todo = TRUE;
+				break;
+			}
+		}
+
+		// If there's still nothing to do, check the indexes.
+		if (! $todo) {
+			$check_keys = array('add', 'drop');
+			foreach ($check_keys as $key) {
+				if ((bool) $this->indexes[$key]) {
+					$todo = TRUE;
+					break;
+				}
+			}
+		}
+
+		// If nothing to do, no need to execute any SQL!
+		if (! $todo)
+			return FALSE;
+
 		if (! $this->created) {
 			sql::add_table(
 				$this->name, $this->columns['add'],
@@ -194,31 +222,31 @@ class Table {
 	}
 	
 	public function insert($data, $extra = '') {
-		self::data(FALSE);
+		$this->execute();
 		sql::insert($this->name, $data, $extra);
 		return $this;
 	}
 	
 	public function update($data, $where) {
-		self::data(FALSE);
+		$this->execute();
 		sql::update($this->name, $data, $where);
 		return $this;
 	}
 	
 	public function delete($where) {
-		self::data(FALSE);
+		$this->execute();
 		sql::delete($this->name, $where);
 		return $this;
 	}
 
 	public function truncate() {
-		self::data(FALSE);
+		$this->execute();
 		sql::truncate($this->name);
 		return $this;
 	}
 
 	public function drop() {
-		self::data(FALSE);
+		$this->execute();
 		sql::drop_table($this->name);
 	}
 
@@ -227,8 +255,8 @@ class Table {
 		$this->name = $new_name;
 	}
 
-	public function import_csv($file_name, $header_lines = 1, $fields = FALSE) {
-		self::data(FALSE);
+	public function import() {
+		$this->execute();
 		$sql = implode("\n", array(
 			sprintf('LOAD DATA LOCAL INFILE \'%s.csv\'', APPPATH.'migrations/data/'.$file_name),
 			sprintf('INTO TABLE `%s`', $this->name),
