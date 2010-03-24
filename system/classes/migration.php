@@ -67,7 +67,11 @@ abstract class Migration {
 				// Do we need to execute the data() method?
 				global $params;
 				if ($method == 'up' AND (bool) $params['with-data']) {
-					$this->import_data();
+					try {
+						$this->import_data();
+					} catch (Exception $e) {
+						echo "\t", 'Warning: ', $e->getMessage(), ' when trying to import.', "\n";
+					}
 				}
 
 				return $result;
