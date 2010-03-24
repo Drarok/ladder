@@ -116,6 +116,11 @@ abstract class Migration {
 	}
 
 	protected function import_data() {
+		if (! (bool) $this->import_data) {
+			echo 'Warning: No import_data specified for migration ', get_class($this), "\n";
+			return;
+		}
+
 		// Explode the class, it's like Something_Name_Migraton_00001
 		$parts = explode('_', get_class($this));
 		$number = end($parts);
