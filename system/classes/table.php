@@ -255,20 +255,33 @@ class Table {
 		$this->name = $new_name;
 	}
 
-	public function import() {
-		$this->execute();
-		$sql = implode("\n", array(
-			sprintf('LOAD DATA LOCAL INFILE \'%s.csv\'', APPPATH.'migrations/data/'.$file_name),
-			sprintf('INTO TABLE `%s`', $this->name),
-			'FIELDS TERMINATED BY \',\' OPTIONALLY ENCLOSED BY \'"\'',
-			'LINES TERMINATED BY \'\\r\\n\'',
-			sprintf('IGNORE %d LINES', $header_lines),
-		));
+	public function import_csv() {
+		// Explode the class, it's like Something_Name_Migraton_00001
+		$parts = explode('_', get_class($this));
+		$number = end($parts);
 
-		if ((bool) $fields)
-			$sql .= '(`'.implode("`,\n`", $fields).'`)'."\n";
+		// Build the path to the CSV.
+		$path = APPPATH.'migrations/data/'.$number.'.csv';
 
-		sql::query($sql);
+		// Check the file exists.
+		if (! file_exists($path)) {
+			throw new Exception('Cannot find file: '.$path);
+		}
+
+		// Open the CSV file.
+		$csv = fopen($path, 'r');
+
+		// Always assume the 1st row is the field names.
+		$headers = fgetcsv($csv);
+
+		// Loop over the file and insert records.
+		while ($row = fgetcsv($csv)) {
+			$data = array_combine($headers, $row);
+			$this->insert($data);
+		}
+
+		// Close the file.
+		fclose($csv);
 
 		return $this;
 	}
