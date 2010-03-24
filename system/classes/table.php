@@ -255,14 +255,7 @@ class Table {
 		$this->name = $new_name;
 	}
 
-	public function import_csv() {
-		// Explode the class, it's like Something_Name_Migraton_00001
-		$parts = explode('_', get_class($this));
-		$number = end($parts);
-
-		// Build the path to the CSV.
-		$path = APPPATH.'migrations/data/'.$number.'.csv';
-
+	public function import_csv($path) {
 		// Check the file exists.
 		if (! file_exists($path)) {
 			throw new Exception('Cannot find file: '.$path);

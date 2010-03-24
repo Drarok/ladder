@@ -7,6 +7,12 @@ abstract class Migration {
 	protected $database_name = FALSE;
 	protected $should_run = TRUE;
 
+	/**
+	 * $import_data array Table names to import. Prefixed with the migration number
+	 * when loaded from migrations/data. eg 'table' becomes '00001_table.csv'.
+	 */
+	protected $import_data = array();
+
 	public function __construct(Database $database) {
 		// Always store the database instance.
 		$this->db = $database;
@@ -56,7 +62,15 @@ abstract class Migration {
 			else {
 				// Remove the underscore and run.
 				$method = substr($method, 1);
-				return $this->$method($args);
+				$result = $this->$method($args);
+
+				// Do we need to execute the data() method?
+				global $params;
+				if ($method == 'up' AND (bool) $params['with-data']) {
+					$this->import_data();
+				}
+
+				return $result;
 			}
 		}
 	}
@@ -99,5 +113,16 @@ abstract class Migration {
 
 	protected function drop_index($table, $name) {
 		sql::drop_index($table, $name);
+	}
+
+	protected function import_data() {
+		// Explode the class, it's like Something_Name_Migraton_00001
+		$parts = explode('_', get_class($this));
+		$number = end($parts);
+
+		foreach ($this->import_data as $table) {
+			$filename = APPPATH.sprintf('migrations/data/%d_%s.csv', $number, $table);
+			$this->table($table)->import_csv($filename);
+		}
 	}
 }
