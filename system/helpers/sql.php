@@ -26,7 +26,7 @@ class sql {
 		self::reset_defaults();
 	}
 
-	public static function add_table($name, $columns, $indexes, $triggers) {
+	public static function add_table($name, $columns, $indexes, $triggers, $options = array()) {
 		$commands = array();
 
 		foreach ($columns as $column)
@@ -35,8 +35,24 @@ class sql {
 		foreach ($indexes as $index)
 			$commands[] = substr(self::add_index(FALSE, $index), 3);
 
-		self::$db->query(sprintf("CREATE TABLE `%s` (\n\t%s\n)",
-			$name, implode(",\n\t", $commands)));
+		/**
+		 * Parse the options array into a fresh array.
+		 */
+		$options_parsed = array();
+		foreach ($options as $opt_key => $opt_value) {
+			$options_parsed[] = sprintf('%s=%s', strtoupper($opt_key), $opt_value);
+		}
+
+		// Make it a string.
+		$options_parsed = implode(' ', $options_parsed);
+
+		// If there's a value, prepend a space.
+		if ((bool) $options_parsed) {
+			$options_parsed = ' '.$options_parsed;
+		}
+
+		self::$db->query(sprintf("CREATE TABLE `%s` (\n\t%s\n)%s",
+			$name, implode(",\n\t", $commands), $options_parsed));
 
 		foreach ($triggers as $trigger)
 			self::$db->query(self::add_trigger(FALSE, $trigger));

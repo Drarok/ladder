@@ -105,13 +105,16 @@ class Database {
 	}
 
 	public function query($sql, $show_sql = NULL) {
-		global $params;
-		
-		if ($show_sql === NULL)
-			$show_sql = array_key_exists('show-sql', $params);
-		
-		if ($show_sql)
+		// If nothing passed, use params to set option.
+		if ($show_sql === NULL) {
+			global $params;
+			$show_sql = $params['show-sql'];
+		}
+
+		// Should we show this SQL?
+		if ($show_sql) {
 			echo $sql, "\n";
+		}
 		
 		$res = mysql_query($sql, $this->conn);
 

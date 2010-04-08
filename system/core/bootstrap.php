@@ -22,6 +22,7 @@ $params = array(
 	'simulate' => FALSE,
 	'database' => FALSE,
 	'run-tests' => FALSE,
+	'show-sql' => FALSE,
 );
 
 // Grab all the params from the command-line.
@@ -83,6 +84,7 @@ Usage: php ladder.php <command> [options]
 	--with-data               - import the data along with the migration (stored in the 'data' folder).
 	--simulate                - don't run the migration, but do update the migrations table.
 	--database=<name>         - set the database name to run against (bypassing the config).
-	--run-tests               - run any test() methods in the migrations that are processed
+	--run-tests               - run any test() methods in the migrations that are processed.
+	--show-sql                - output any sql queries before they are executed.
 <?php
 };

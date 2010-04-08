@@ -7,12 +7,13 @@ class Table {
 	private $triggers;
 	private $created;
 	private $table_columns;
+	private $options;
 
-	public static function factory($name, $created = FALSE) {
-		return new Table($name, $created);
+	public static function factory($name, $created = FALSE, $options = NULL) {
+		return new Table($name, $created, $options);
 	}
 
-	public function __construct($name, $created = FALSE) {
+	public function __construct($name, $created = FALSE, $options = NULL) {
 		$this->name = $name;
 		$this->created = $created;
 		$this->clear();
@@ -21,6 +22,12 @@ class Table {
 			$this->column('id', 'integer', array('null' => FALSE, 'autoincrement' => TRUE));
 			$this->index('PRIMARY', 'id');
 		}
+
+		if ($options === NULL) {
+			$options = Config::item('table');
+		}
+
+		$this->options = $options;
 	}
 
 	public function __get($key) {
@@ -197,7 +204,8 @@ class Table {
 		if (! $this->created) {
 			sql::add_table(
 				$this->name, $this->columns['add'],
-				$this->indexes['add'], $this->triggers['add']
+				$this->indexes['add'], $this->triggers['add'],
+				$this->options
 			);
 		} else {
 			sql::alter(
