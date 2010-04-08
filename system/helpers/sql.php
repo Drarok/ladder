@@ -26,14 +26,20 @@ class sql {
 		self::reset_defaults();
 	}
 
-	public static function add_table($name, $columns, $indexes, $triggers, $options = array()) {
+	public static function add_table($name, $columns, $indexes, $triggers, $constraints, $options = array()) {
 		$commands = array();
 
-		foreach ($columns as $column)
+		foreach ($columns as $column) {
 			$commands[] = substr(self::add_column(FALSE, $column), 3);
+		}
 
-		foreach ($indexes as $index)
+		foreach ($indexes as $index) {
 			$commands[] = substr(self::add_index(FALSE, $index), 3);
+		}
+
+		foreach ($constraints as $constraint) {
+			$commands[] = substr(self::add_constraint(FALSE, $constraint), 3);
+		}
 
 		/**
 		 * Parse the options array into a fresh array.
@@ -173,28 +179,68 @@ class sql {
 		self::$db->query($command);
 	}
 
-	public static function alter($table, $columns, $indexes, $triggers) {
+	public static function add_constraint($table, $constraint) {
+		list($name, $index, $reference_table, $reference_fields, $cascade) = $constraint;
+
+		// Escape the field names.
+		foreach ($reference_fields as &$field) {
+			$field = '`'.$field.'`';
+		}
+
+		// Patch the cascade items to work in SQL.
+		foreach ($cascade as &$cas) {
+			$cas = 'ON '.strtoupper($cas).' CASCADE';
+		}
+
+		$command = sprintf(
+			'ADD CONSTRAINT `%s` FOREIGN KEY (`%s`) REFERENCES `%s` (%s) %s',
+			$name, $index, $reference_table, implode(', ', $reference_fields),
+			implode(' ', $cascade)
+		);
+
+		if ($table === FALSE) {
+			return $command;
+		}
+
+		self::$db->query($command);
+	}
+
+	public static function drop_constraint($table, $constraint) {
+		$command = sprintf('DROP FOREIGN KEY `%s`', $constraint);
+
+		if (FALSE === $table)
+			return $command;
+
+		self::$db->query(sprintf('ALTER TABLE `%s` %s', $table, $command));
+	}
+
+	public static function alter($table, $columns, $indexes, $triggers, $constraints, $options) {
 		$changes = array();
 
-		foreach ($columns['add'] as $column)
-			$changes[] = self::add_column(FALSE, $column);
-		foreach ($columns['alter'] as $column)
-			$changes[] = self::alter_column(FALSE, $column);
 		foreach ($columns['drop'] as $column)
 			$changes[] = self::drop_column(FALSE, $column);
+		foreach ($columns['alter'] as $column)
+			$changes[] = self::alter_column(FALSE, $column);
+		foreach ($columns['add'] as $column)
+			$changes[] = self::add_column(FALSE, $column);
 
-		foreach ($indexes['add'] as $index)
-			$changes[] = self::add_index(FALSE, $index);
 		foreach ($indexes['drop'] as $index)
 			$changes[] = self::drop_index(FALSE, $index);
+		foreach ($indexes['add'] as $index)
+			$changes[] = self::add_index(FALSE, $index);
+
+		foreach ($constraints['drop'] as $constraint)
+			$changes[] = self::drop_constraint(FALSE, $constraint);
+		foreach ($constraints['add'] as $constraint)
+			$changes[] = self::add_constraint(FALSE, $constraint);
 
 		if ((bool) $changes)
 			self::$db->query(sprintf('ALTER TABLE `%s` '."\n\t".'%s', $table, implode(",\n\t", $changes)));
 
-		foreach ($triggers['add'] as $trigger)
-			self::$db->query(self::add_trigger(FALSE, $trigger));
 		foreach ($triggers['drop'] as $trigger)
 			self::$db->query(self::drop_trigger(FALSE, $trigger));
+		foreach ($triggers['add'] as $trigger)
+			self::$db->query(self::add_trigger(FALSE, $trigger));
 	}
 
 	public static function escape($value, $wrap = '\'') {

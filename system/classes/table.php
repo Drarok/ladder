@@ -5,6 +5,7 @@ class Table {
 	private $columns;
 	private $indexes;
 	private $triggers;
+	private $constraints;
 	private $created;
 	private $table_columns;
 	private $options;
@@ -59,7 +60,7 @@ class Table {
 	 * @return NULL
 	 */
 	public function clear() {
-		$this->columns = $this->indexes = $this->triggers = array(
+		$this->columns = $this->indexes = $this->triggers = $this->constraints = array(
 			'add' => array(),
 			'drop' => array(),
 		);
@@ -169,6 +170,50 @@ class Table {
 	}
 
 	/**
+	 * Create a constraint on this Table instance.
+	 * @return Table
+	 * @param string $index The index in this table to constrain.
+	 * @param string $reference_table The table to refer to.
+	 * @param string|array $reference_fields Fields in $reference_table to constrain to.
+	 * @param string|array $cascade[optional] Which actions to cascade.
+	 */
+	public function constraint($index, $reference_table, $reference_fields, $cascade = array()) {
+		// Fix up any string/array params first.
+		$reference_fields = (array) $reference_fields;
+		$cascade = (array) $cascade;
+
+		// Work out a name for the constraint.
+		$name = sprintf('%s_%s_%s', $index, $reference_table, implode('_', $reference_fields));
+
+		// Remember its details for later.
+		$this->constraints['add'][$name] = array(
+			$name, $index, $reference_table, $reference_fields, $cascade
+		);
+
+		return $this;
+	}
+
+	/**
+	 * Drop a constraint from this Table instance.
+	 * @return Table
+	 * @param string $index The index in this table the constraint uses.
+	 * @param string $reference_table The table it refers to.
+	 * @param string|array $reference_fields The fields it refers to.
+	 */
+	public function drop_constraint($index, $reference_table, $reference_fields) {
+		// Fix up any string/array params first.
+		$reference_fields = (array) $reference_fields;
+
+		// Work out a name for the constraint.
+		$name = sprintf('%s_%s_%s', $index, $reference_table, implode('_', $reference_fields));
+
+		// Remember it for later.
+		$this->constraints['drop'][$name] = $name;
+
+		return $this;
+	}
+
+	/**
 	 * Perform all outstanding SQL statements.
 	 * @return NULL
 	 */
@@ -197,6 +242,17 @@ class Table {
 			}
 		}
 
+		// Still nothing? Look at constraints.
+		if (! $todo) {
+			$check_keys = array('add', 'drop');
+			foreach ($check_keys as $key) {
+				if ((bool) $this->constraints[$key]) {
+					$todo = TRUE;
+					break;
+				}
+			}
+		}
+
 		// If nothing to do, no need to execute any SQL!
 		if (! $todo)
 			return FALSE;
@@ -205,18 +261,21 @@ class Table {
 			sql::add_table(
 				$this->name, $this->columns['add'],
 				$this->indexes['add'], $this->triggers['add'],
-				$this->options
+				$this->constraints['add'], $this->options
 			);
 		} else {
 			sql::alter(
 				$this->name, $this->columns,
-				$this->indexes, $this->triggers
+				$this->indexes, $this->triggers,
+				$this->constraints, $this->options
 			);
 		}
 
 		$this->clear();
 
 		$this->created = TRUE;
+
+		return $this;
 	}
 	
 	public function data($migration) {
