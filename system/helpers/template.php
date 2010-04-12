@@ -6,7 +6,7 @@ class template {
 	 */
 	public static function migration($name) {
 		return str_replace(
-			array('MIGRATION_NAME', 'LADDER_VERSION')
+			array('MIGRATION_NAME', 'LADDER_VERSION'),
 			array($name, LADDER_VERSION),
 			file_get_contents(SYSPATH.'templates/migration.php')
 		);
