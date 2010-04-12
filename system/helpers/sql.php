@@ -244,8 +244,9 @@ class sql {
 	}
 
 	public static function escape($value, $wrap = '\'') {
-		if (is_string($value))
-			$value = $wrap.mysql_real_escape_string($value).$wrap;
+		if (is_string($value)) {
+			$value = $wrap.self::$db->escape_value($value).$wrap;
+		}
 
 		return $value;
 	}

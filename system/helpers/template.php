@@ -5,7 +5,11 @@ class template {
 	 * Return a formatted migration file.
 	 */
 	public static function migration($name) {
-		return str_replace('MIGRATION_NAME', $name, file_get_contents(SYSPATH.'templates/migration.php'));
+		return str_replace(
+			array('MIGRATION_NAME', 'LADDER_VERSION')
+			array($name, LADDER_VERSION),
+			file_get_contents(SYSPATH.'templates/migration.php')
+		);
 	}
 
 	public static function data() {

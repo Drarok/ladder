@@ -3,6 +3,7 @@
 $imports = array(
 	'classes' => array(
 		'database',
+		'grant_manager',
 		'ladder',
 		'migration',
 		'table',

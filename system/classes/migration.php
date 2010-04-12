@@ -6,6 +6,7 @@ abstract class Migration {
 	protected $databases = FALSE;
 	protected $database_name = FALSE;
 	protected $should_run = TRUE;
+	protected $min_version = FALSE;
 
 	/**
 	 * $import_data array Table names to import. Prefixed with the migration number
@@ -14,6 +15,11 @@ abstract class Migration {
 	protected $import_data = array();
 
 	public function __construct(Database $database) {
+		// Do we need to check version numbers?
+		if ((bool) $this->min_version) {
+			Ladder::check_version_min($this->min_version);
+		}
+
 		// Always store the database instance.
 		$this->db = $database;
 
@@ -21,8 +27,12 @@ abstract class Migration {
 		$this->database_name = $database->name;
 
 		// Detect if we should run or not, if they've set the $databases property.
-		if (is_array($this->databases))
+		if (is_array($this->databases)) {
 			$this->should_run = in_array($database->name, $this->databases);
+		}
+
+		// Get a reference to the grant manager singleton.
+		$this->permissions = Grant_Manager::instance();
 
 		// Allow migrations to perform any setup they need.
 		$this->init();

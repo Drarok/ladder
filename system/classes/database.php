@@ -104,6 +104,10 @@ class Database {
 		$this->connect();
 	}
 
+	public function escape_value($value) {
+		return mysql_real_escape_string($value, $this->conn);
+	}
+
 	public function query($sql, $show_sql = NULL) {
 		// If nothing passed, use params to set option.
 		if ($show_sql === NULL) {
