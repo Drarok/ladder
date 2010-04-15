@@ -129,14 +129,16 @@ class Database {
 		}
 	}
 
-	public function next_database() {
+	public function next_database($output = TRUE) {
 		++$this->database_id;
 
 		if ($this->database_id < count($this->databases)) {
 			if (! mysql_select_db($this->name, $this->conn))
 				throw new Exception('Invalid database: '.$this->name);
 
-			echo $this->name, '... ', "\n";;
+			if ((bool) $output) {
+				echo $this->name, '... ', "\n";
+			}
 			$this->check_migrations_table();
 
 			return TRUE;

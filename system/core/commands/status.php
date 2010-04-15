@@ -37,7 +37,7 @@ echo "\n";
 
 $db = Database::factory();
 
-while ($db->next_database()) {
+while ($db->next_database(FALSE)) {
 	// Grab the latest migration.
 	$max_migration = $db->get_current_migration();
 
