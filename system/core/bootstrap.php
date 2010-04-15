@@ -24,6 +24,7 @@ $params = array(
 	'run-tests' => FALSE,
 	'show-sql' => FALSE,
 	'verbose' => FALSE,
+	'force' => FALSE,
 );
 
 // Grab all the params from the command-line.
@@ -88,5 +89,6 @@ Usage: php ladder.php <command> [options]
 	--run-tests               - run any test() methods in the migrations that are processed.
 	--show-sql                - output any sql queries before they are executed.
 	--verbose                 - include extra output (only used by "status" at present).
+	--force                   - force operations to run that normally wouldn't.
 <?php
 };
