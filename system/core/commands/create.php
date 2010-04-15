@@ -25,8 +25,7 @@ $new_id = sprintf('%05d', 1 + (int) $migration_id);
 $file_name = $new_id.'-'.$params['name'].EXT;
 
 // Translate filename to classname.
-$migration_name = implode('_', array_map('ucfirst', explode('_', strtolower($params['name']))))
-	.'_Migration_'.$new_id;
+$migration_name = Migration::class_name($file_name);
 
 // Save the file and let the user know.
 $migration_file_path = APPPATH.'migrations/'.$file_name;

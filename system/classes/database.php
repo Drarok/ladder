@@ -135,6 +135,10 @@ class Database {
 		if ($this->database_id < count($this->databases)) {
 			if (! mysql_select_db($this->name, $this->conn))
 				throw new Exception('Invalid database: '.$this->name);
+
+			echo $this->name, '... ', "\n";;
+			$this->check_migrations_table();
+
 			return TRUE;
 		} else {
 			return FALSE;
@@ -182,5 +186,28 @@ class Database {
 		);
 		$migration_result = mysql_fetch_object($migration_query);
 		return (int) $migration_result->migration;
+	}
+
+	public function has_migration($id) {
+		$query = $this->query(sprintf(
+			'SELECT `migration` FROM `%s` WHERE `migration` = %d',
+			$this->get_migrations_table(), (int) $id
+		));
+
+		return mysql_num_rows($query) == 1;
+	}
+
+	public function remove_migration($id) {
+		$query = $this->query(sprintf(
+			'DELETE FROM `%s` WHERE `migration` = %d',
+			$this->get_migrations_table(), (int) $id
+		));
+	}
+
+	public function add_migration($id) {
+		$query = $this->query(sprintf(
+			'INSERT INTO `%s` (`migration`, `applied`) VALUES (%d, NOW())',
+			$this->get_migrations_table(), (int) $id
+		));
 	}
 }

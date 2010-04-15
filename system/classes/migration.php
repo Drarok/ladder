@@ -14,6 +14,84 @@ abstract class Migration {
 	 */
 	protected $import_data = array();
 
+	public static function factory(Database $database, $id) {
+		// Initialise.
+		$instance = FALSE;
+
+		// Get the class name from the id.
+		$migration_file = Migration::file_name($id);
+
+		// If the file was found, get the class name.
+		if ((bool) $migration_file) {
+			require_once($migration_file);
+			$migration_class = Migration::class_name($migration_file);
+		}
+
+		// If we got a class name, instantiate.
+		if ((bool) $migration_class) {
+			$instance = new $migration_class($database);
+		}
+
+		return $instance;
+	}
+
+	/**
+	 * Return the full path to a migration, based on its id.
+	 * @param integer The id to look for.
+	 * @return mixed Either a boolean FALSE on failure, or a string,
+	 * specifying the full path on success.
+	 */
+	public static function file_name($id) {
+		// Work out the path.
+		$migration_path = APPPATH.'migrations'.DS;
+
+		// Append the filename skeleton.
+		$migration_path .= sprintf('%05d-*', (int) $id);
+
+		// Look on the filesystem for it.
+		$files = glob($migration_path);
+
+		// If we didn't find it, bail.
+		if (count($files) != 1) {
+			return FALSE;
+		}
+
+		return $files[0];
+	}
+
+	/**
+	 * Return the class name of a Migration, based off its file name.
+	 * @param $file_name mixed Either the id or filename of a migration. Can optionally include the path.
+	 * @return mixed Either boolean FALSE on failure, or the class name.
+	 */
+	public static function class_name($file_name) {
+		// Pass integers through Migration::class_name first.
+		if (is_numeric($file_name)) {
+			$file_name = Migration::file_name($file_name);
+			if ($file_name === FALSE) {
+				return FALSE;
+			}
+		}
+
+		// Make sure we only look at the filename.
+		$file_name = basename($file_name, EXT);
+
+		// Split the id and name apart.
+		$parts = explode('-', $file_name, 2);
+
+		// We should always end up with 2 parts.
+		if (count($parts) != 2) {
+			return FALSE;
+		}
+
+		// Return the class name.
+		return sprintf(
+			'%s_Migration_%05d',
+			implode('_', array_map('ucfirst', explode('_', $parts[1]))),
+			$parts[0]
+		);
+	}
+
 	public function __construct(Database $database) {
 		// Do we need to check version numbers?
 		if ((bool) $this->min_version) {

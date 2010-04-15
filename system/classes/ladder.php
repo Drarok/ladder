@@ -10,7 +10,6 @@ final class Ladder {
 		$this->db = Database::factory();
 
 		while ($this->db->next_database()) {
-			$this->db->check_migrations_table();
 			try {
 				$this->migrate($migrate_to, $simulate);
 			} catch (Exception $e) {
@@ -93,8 +92,7 @@ final class Ladder {
 				continue;
 
 			// Translate filename to classname.
-			$migration_name = implode('_', array_map('ucfirst', explode('_', strtolower(substr($migration_name, 0, -4)))));
-			$migration_name = $migration_name.'_Migration_'.$migration_id;
+			$migration_name = Migration::class_name($file_path);
 
 			if ($simulate === TRUE)
 				echo '(simulated) ';
@@ -121,17 +119,9 @@ final class Ladder {
 
 				// Either the migration succeeded, or we're in simulate mode.
 				if ($method == 'up') {
-					$this->db->query(sprintf(
-						'INSERT INTO `%s` SET `migration`=%d, `applied`=NOW()',
-						$this->db->get_migrations_table(),
-						$migration_id
-					));
+					$this->db->add_migration($migration_id);
 				} else {
-					$this->db->query(sprintf(
-						'DELETE FROM `%s` WHERE `migration`=%d',
-						$this->db->get_migrations_table(),
-						$migration_id
-					));
+					$this->db->remove_migration($migration_id);
 				}
 			} catch (Exception $e) {
 				echo "\n\tERROR: ", $e->getMessage(), "\n";
