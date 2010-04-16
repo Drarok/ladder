@@ -92,6 +92,47 @@ abstract class Migration {
 		);
 	}
 
+	/**
+	 * Return an array of migration ids.
+	 * @param $keyed boolean When TRUE, return $id => $class_name associative array.
+	 * Otherwise, a simple array of integers.
+	 * @returns array
+	 */
+	public static function get_migrations($keyed = FALSE) {
+		// Work out the path to our migrations.
+		$migrations_path = APPPATH.'migrations'.DS.'*.php';
+
+		// Search the filesystem and sort.
+		$migrations = glob($migrations_path);
+		sort($migrations);
+
+		// Initialise our result array.
+		$result = array();
+
+		// Loop over each and store its id.
+		foreach ($migrations as $migration_path) {
+			// Split the numeric part off the filename.
+			list($id) = explode('-', basename($migration_path), 2);
+
+			// Make sure it's numeric.
+			$id = (int) $id;
+
+			// Store it in our array.
+			if ((bool) $keyed) {
+				$result[$id] = Migration::class_name($migration_path);
+			} else {
+				$result[] = $id;
+			}
+		}
+
+		return $result;
+	}
+
+	public static function get_latest_migration_id() {
+		$migrations = Migration::get_migrations();
+		return end($migrations);
+	}
+
 	public function __construct(Database $database) {
 		// Do we need to check version numbers?
 		if ((bool) $this->min_version) {
