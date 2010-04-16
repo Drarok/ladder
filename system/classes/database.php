@@ -190,6 +190,24 @@ class Database {
 		return (int) $migration_result->migration;
 	}
 
+	public function get_migrations() {
+		// Query the table.
+		$query = $this->query(sprintf(
+			'SELECT `migration`  FROM `%s` ORDER BY `migration`',
+			$this->get_migrations_table()
+		));
+
+		// Initialise our result array.
+		$result = array();
+
+		// Loop over each row.
+		while ($row = mysql_fetch_object($query)) {
+			$result[] = (int) $row->migration;
+		}
+
+		return $result;
+	}
+
 	public function has_migration($id) {
 		$query = $this->query(sprintf(
 			'SELECT `migration` FROM `%s` WHERE `migration` = %d',
