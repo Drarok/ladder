@@ -2,36 +2,14 @@
 
 global $params;
 
-// Grab all the migrations and sort them.
-$migrations = glob(APPPATH.'migrations'.DS.'*.php');
-sort($migrations);
-
-// Initialise our second array.
-$keyed_migrations = array();
-
-// Loop over each migration, fetching info.
-foreach ($migrations as $migration) {
-	// Split the id and migration.
-	list($id, $migration) = explode('-', basename($migration, EXT), 2);
-
-	// Force it to be an integer (also remember for later).
-	$latest_id = $id = (int) $id;
-
-	// Store it in our second array.
-	$latest_name = $keyed_migrations[$id] = $migration;
-}
-
-// Swap the second array into the first and destroy it.
-$migrations = $keyed_migrations;
-unset($keyed_migrations);
-
-// Get the numeric part from the last one.
-$ids = array_keys($migrations);
+// Get info from the filesystem about our migrations.
+$migrations = Migration::get_migrations(TRUE);
+$latest_id = Migration::get_latest_migration_id();
 
 echo "Migration Status\n";
 echo 'Latest migration is ', $latest_id;
 if ($params['verbose']) {
-	echo ' (', $latest_name, ')';
+	echo ' (', substr($migrations[$latest_id], 0, -16), ')';
 }
 echo "\n";
 
@@ -44,23 +22,24 @@ while ($db->next_database(FALSE)) {
 	// Initialise our array of migrations to apply.
 	$apply = array();
 
+	// Get the migrations from this database.
+	$db_migrations = $db->get_migrations();
+
+	// Loop over each filesystem migration and see if it's applied.
+	foreach ($migrations as $migration_id => $migration_class) {
+		if (! in_array($migration_id, $db_migrations)) {
+			$apply[$migration_id] = $migration_class;
+		}
+	}
+
 	// Work out the status identifier.
-	if ($latest_id === $max_migration) {
+	if (! (bool) $apply) {
 		// This database is up-to-date.
 		$status = '=';
-	} elseif ($latest_id > $max_migration) {
+	} elseif (count($db_migrations) < count($migrations)) {
 		// This database is out-of-date.
 		$status = '<';
-
-		// If verbose, output the missing migration names.
-		if ($params['verbose']) {
-			foreach ($migrations as $migration_id => $migration_name) {
-				if ($migration_id > $max_migration) {
-					$apply[] = $migration_name;
-				}
-			}
-		}
-	} elseif ($latest_id < $max_migration) {
+	} elseif (count($db_migrations) > count($migrations)) {
 		// This database is more recent than the latest!
 		$status = '!';
 	} else {
@@ -70,10 +49,9 @@ while ($db->next_database(FALSE)) {
 
 	echo $status, "\t", $db->name, ': ', $max_migration, "\n";
 
-	// Output the ones we need to apply in verbose mode.
-	if ($params['verbose'] and (bool) $apply) {
-		foreach ($apply as $id => $name) {
-			echo "\t\t", $name, "\n";
+	if ($params['verbose']) {
+		foreach ($apply as $migration_id => $migration_class) {
+			echo "\t\t", substr($migration_class, 0, -16), ': ', $migration_id, "\n";
 		}
 	}
 }
