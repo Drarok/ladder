@@ -25,6 +25,7 @@ $params = array(
 	'show-sql' => FALSE,
 	'verbose' => FALSE,
 	'force' => FALSE,
+	'version' => FALSE,
 );
 
 // Grab all the params from the command-line.
@@ -48,8 +49,10 @@ foreach ($_SERVER['argv'] as $arg) {
 
 array_shift($args); // Ignore the filename at args[0].
 
-// Grab the command off the arg list.
-$command = array_shift($args);
+// Grab the command off the arg list, hack to 'version' if none passed with --version.
+if (! (bool) $command = array_shift($args) AND $params['version']) {
+	$command = 'version';
+}
 
 // Set the default config key to use.
 Config::set_config($params['config']);
