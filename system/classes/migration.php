@@ -119,6 +119,10 @@ abstract class Migration {
 
 			// Store it in our array.
 			if ((bool) $keyed) {
+				if (array_key_exists($id, $result)) {
+					throw new Exception('Duplicate migration id:'.$id);
+				}
+
 				$result[$id] = Migration::class_name($migration_path);
 			} else {
 				$result[] = $id;
