@@ -25,12 +25,33 @@ while ($db->next_database()) {
 			continue;
 		}
 
+		// Initialise the success var.
+		$success = FALSE;
+
+		// Output info.
 		echo 'Downgrading...', "\n";
+
+		// Attempt to run the migration.
 		try {
+			// Run the down method first.
 			$migration->_down();
-			$db->remove_migration($migration_id);
+
+			// Force the destructor to run inside the 'try' block.
+			unset($migration);
+
+			// Success!
+			$success = TRUE;
 		} catch (Exception $e) {
 			echo 'Error: ', $e->getMessage(), "\n";
+		}
+
+		// If it succeeded, or --force is specified, update the migrations.
+		if ($success OR $params['force']) {
+			try {
+				$db->remove_migration($migration_id);
+			} catch (Exception $e) {
+				echo 'Error: ', $e->getMessage(), "\n";
+			}
 		}
 	}
 }

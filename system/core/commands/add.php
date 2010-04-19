@@ -20,17 +20,39 @@ while ($db->next_database()) {
 	if (! (bool) $migration) {
 		echo 'Error: Failed to get migration!', "\n";
 	} else {
+		// Don't run if the database already has this migration.
 		if ($db->has_migration($migration_id)) {
 			echo 'This database already contains migration ', $migration_id, "\n";
 			continue;
 		}
 
+		// Initialise our success var.
+		$success = FALSE;
+
+		// Output some info.
 		echo 'Upgrading...', "\n";
+
+		// Attempt to run the migration.
 		try {
+			// Run the up method.
 			$migration->_up();
-			$db->add_migration($migration_id);
+
+			// Run the destructor.
+			unset($migration);
+
+			// Success!
+			$success = TRUE;
 		} catch (Exception $e) {
 			echo 'Error: ', $e->getMessage(), "\n";
+		}
+
+		// If it succeeded, or --force is specified, update the migrations.
+		if ($success OR $params['force']) {
+			try {
+				$db->add_migration($migration_id);
+			} catch (Exception $e) {
+				echo 'Error: ', $e->getMessage(), "\n";
+			}
 		}
 	}
 }
