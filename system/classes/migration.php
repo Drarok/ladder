@@ -93,47 +93,76 @@ abstract class Migration {
 	}
 
 	/**
-	 * Return an array of migration ids.
-	 * @param $keyed boolean When TRUE, return $id => $class_name associative array.
-	 * Otherwise, a simple array of integers.
-	 * @returns array
+	 * Return an associative array of <id> => <migration_path>.
+	 * @return array
 	 */
-	public static function get_migrations($keyed = FALSE) {
+	public static function get_migration_paths() {
 		// Work out the path to our migrations.
 		$migrations_path = APPPATH.'migrations'.DS.'*.php';
 
 		// Search the filesystem and sort.
 		$migrations = glob($migrations_path);
 		sort($migrations);
+		
+		// Initialise the result.
+		$result = array();
+
+		// Split the numeric part off the filename.
+		foreach ($migrations as $file_path) {
+			// Split the id off the front.
+			list($id) = explode('-', basename($file_path), 2);
+
+			// Make sure it's an integer.
+			$id = (int) $id;
+
+			// Make sure it's unique.
+			if (array_key_exists($id, $result)) {
+				throw new Exception('Duplicate migration id: '.$id);
+			}
+
+			// Add it to the result array.
+			$result[$id] = $file_path;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Return an array of migration ids.
+	 * @return array
+	 */
+	public static function get_migration_ids() {
+		// Simply return the keys from get_migration_paths.
+		return array_keys(Migration::get_migration_paths());
+	}
+
+	/**
+	 * Get an associative array of <id> => <class_name>.
+	 * @return array
+	 */
+	public static function get_migration_names($full_name = FALSE) {
+		// Get the paths.
+		$migrations = Migration::get_migration_paths();
 
 		// Initialise our result array.
 		$result = array();
 
-		// Loop over each and store its id.
-		foreach ($migrations as $migration_path) {
-			// Split the numeric part off the filename.
-			list($id) = explode('-', basename($migration_path), 2);
+		// Loop over each file and get its class name.
+		foreach ($migrations as $id => $migration_path) {
+			$migration_class = Migration::class_name($migration_path);
 
-			// Make sure it's numeric.
-			$id = (int) $id;
-
-			// Store it in our array.
-			if ((bool) $keyed) {
-				if (array_key_exists($id, $result)) {
-					throw new Exception('Duplicate migration id:'.$id);
-				}
-
-				$result[$id] = Migration::class_name($migration_path);
-			} else {
-				$result[] = $id;
+			if (! (bool) $full_name) {
+				$migration_class = substr($migration_class, 0, -16);
 			}
+
+			$result[$id] = $migration_class;
 		}
 
 		return $result;
 	}
 
 	public static function get_latest_migration_id() {
-		$migrations = Migration::get_migrations();
+		$migrations = Migration::get_migration_ids();
 		return end($migrations);
 	}
 
