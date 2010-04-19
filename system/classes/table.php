@@ -257,23 +257,28 @@ class Table {
 		if (! $todo)
 			return FALSE;
 
-		if (! $this->created) {
-			sql::add_table(
-				$this->name, $this->columns['add'],
-				$this->indexes['add'], $this->triggers['add'],
-				$this->constraints['add'], $this->options
-			);
-		} else {
-			sql::alter(
-				$this->name, $this->columns,
-				$this->indexes, $this->triggers,
-				$this->constraints, $this->options
-			);
+		try {
+			if (! $this->created) {
+				sql::add_table(
+					$this->name, $this->columns['add'],
+					$this->indexes['add'], $this->triggers['add'],
+					$this->constraints['add'], $this->options
+				);
+
+				$this->created = TRUE;
+			} else {
+				sql::alter(
+					$this->name, $this->columns,
+					$this->indexes, $this->triggers,
+					$this->constraints, $this->options
+				);
+			}
+		} catch (Exception $e) {
+			$this->clear();
+			throw $e;
 		}
 
 		$this->clear();
-
-		$this->created = TRUE;
 
 		return $this;
 	}
