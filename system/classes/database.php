@@ -73,14 +73,26 @@ class Database {
 	}
 
 	protected function connect() {
-		$port = Config::item('database.port');
-		if ((bool) $port)
+		// Grab the port, prefix with colon if it's set.
+		if ((bool) $port = Config::item('database.port')) {
 			$port = ':'.$port;
+		}
 
+		// Initialise the options.
+		$parsed_options = 0;
+
+		// Check for options.
+		if ((bool) Config::item('database.compress')) {
+			$parsed_options |= MYSQL_CLIENT_COMPRESS;
+		}
+
+		// Attempt to connect.
 		$this->conn = mysql_connect(
 			$host = Config::item('database.hostname').$port,
 			Config::item('database.username'),
-			Config::item('database.password')
+			Config::item('database.password'),
+			FALSE,
+			$parsed_options
 		);
 
 		if (! (bool) $this->conn)
