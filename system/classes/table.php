@@ -253,6 +253,17 @@ class Table {
 			}
 		}
 
+		// Still nothing? Look at triggers.
+		if (! $todo) {
+			$check_keys = array('add', 'drop');
+			foreach ($check_keys as $key) {
+				if ((bool) $this->triggers[$key]) {
+					$todo = TRUE;
+					break;
+				}
+			}
+		}
+
 		// If nothing to do, no need to execute any SQL!
 		if (! $todo)
 			return FALSE;
