@@ -352,7 +352,17 @@ class Table {
 
 		// Loop over the file and insert records.
 		while ($row = fgetcsv($csv)) {
+			// Change any strings of 'null' into actual NULL values.
+			foreach ($row as &$cell) {
+				if (strtolower($cell) == 'null') {
+					$cell = NULL;
+				}
+			}
+
+			// Combine the data into an associative array.
 			$data = array_combine($headers, $row);
+
+			// Insert into the table.
 			$this->insert($data);
 		}
 

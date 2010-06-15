@@ -248,6 +248,11 @@ class sql {
 			$value = $wrap.self::$db->escape_value($value).$wrap;
 		}
 
+		// Convert null values to the NULL keyword.
+		if ($value === NULL) {
+			$value = 'NULL';
+		}
+
 		return $value;
 	}
 
