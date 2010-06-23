@@ -31,8 +31,12 @@ class Config {
 				self::$cache[$filename] = $config;
 			} else {
 				// Check the requested config exists.
-				if (! array_key_exists(self::$config_name, $config))
-					throw new Exception('Invalid config name: '.self::$config_name);
+				if (! array_key_exists(self::$config_name, $config)) {
+					throw new Exception(sprintf(
+						'Invalid config name \'%s\' in file \'%s\'.'.
+						self::$config_name, $filename
+					));
+				}
 
 				// Save it to the cache.
 				self::$cache[$filename] = $config[self::$config_name];
