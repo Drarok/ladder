@@ -336,6 +336,7 @@ class Table {
 	public function rename($new_name) {
 		sql::rename_table($this->name, $new_name);
 		$this->name = $new_name;
+		return $this;
 	}
 
 	public function import_csv($path) {
