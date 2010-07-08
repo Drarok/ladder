@@ -6,9 +6,14 @@ class Ladder_Controller extends Controller {
 			throw new Exception('This controller is not accessible from the web');
 		}
 		
+		// Set up error and exception handlers.
 		set_error_handler(array($this, '_error_handler'));
 		set_exception_handler(array($this, '_exception_handler'));
 		
+		// Define the constants we need.
+		define('DS', DIRECTORY_SEPARATOR);
+		
+		// Kick off the parent constructor now.
 		parent::__construct();
 	}
 	

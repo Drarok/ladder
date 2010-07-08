@@ -1,19 +1,6 @@
 <?php
 
 abstract class Migration {
-	protected $tables = array();
-
-	protected $databases = FALSE;
-	protected $database_name = FALSE;
-	protected $should_run = TRUE;
-	protected $min_version = FALSE;
-
-	/**
-	 * $import_data array Table names to import. Prefixed with the migration number
-	 * when loaded from migrations/data. eg 'table' becomes '00001_table.csv'.
-	 */
-	protected $import_data = array();
-
 	public static function factory(Database $database, $id) {
 		// Initialise.
 		$instance = FALSE;
@@ -165,6 +152,23 @@ abstract class Migration {
 		$migrations = Migration::get_migration_ids();
 		return end($migrations);
 	}
+	
+	/**
+	 * Instance Variables and Methods.
+	 */
+	
+	protected $tables = array();
+
+	protected $databases = FALSE;
+	protected $database_name = FALSE;
+	protected $should_run = TRUE;
+	protected $min_version = FALSE;
+
+	/**
+	 * $import_data array Table names to import. Prefixed with the migration number
+	 * when loaded from migrations/data. eg 'table' becomes '00001_table.csv'.
+	 */
+	protected $import_data = array();
 
 	public function __construct(Database $database) {
 		// Do we need to check version numbers?

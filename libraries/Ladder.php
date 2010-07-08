@@ -1,10 +1,10 @@
 <?php
 
 final class Ladder {
+	public static $show_sql = FALSE;
+	
 	protected $db;
 	protected $options;
-
-	public static $show_sql = FALSE;
 
 	public function __construct($migrate_to, $simulate = FALSE) {
 		$this->db = Database::factory();
