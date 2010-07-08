@@ -1,6 +1,37 @@
 <?php
 
 abstract class Migration {
+	/**
+	 * Return an associative array of <id> => <migration_path>.
+	 * @return array
+	 */
+	public static function get_migration_paths() {
+		// Get the path to the migrations.
+		$path = Kohana::config('ladder.migrations_path');
+		
+		// Get the file list and sort them.
+		$files = Kohana::list_files($path);
+		sort($files);
+		
+		// Loop over each file and add it to the result array.
+		$result = array();
+		foreach ($files as $file) {
+			// Use this convenient PHP behaviour to get the numeric part.
+			$id = (int) basename($file);
+			
+			// Check for the key already existing.
+			if (array_key_exists($id, $result)) {
+				throw new Exception('Duplicate migration id: '.$id);
+			}
+			
+			// Add to the array.
+			$result[$id] = $file;
+		}
+		
+		// Return!
+		return $result;
+	}
+	
 	public static function factory(Database $database, $id) {
 		// Initialise.
 		$instance = FALSE;
@@ -30,7 +61,7 @@ abstract class Migration {
 	 */
 	public static function file_name($id) {
 		// Work out the path.
-		$migration_path = APPPATH.'migrations'.DS;
+		$migration_path = Kohana::config('ladder.migrations_path');
 
 		// Append the filename skeleton.
 		$migration_path .= sprintf('%05d-*', (int) $id);
@@ -77,41 +108,6 @@ abstract class Migration {
 			implode('_', array_map('ucfirst', explode('_', $parts[1]))),
 			$parts[0]
 		);
-	}
-
-	/**
-	 * Return an associative array of <id> => <migration_path>.
-	 * @return array
-	 */
-	public static function get_migration_paths() {
-		// Work out the path to our migrations.
-		$migrations_path = APPPATH.'migrations'.DS.'*.php';
-
-		// Search the filesystem and sort.
-		$migrations = glob($migrations_path);
-		sort($migrations);
-		
-		// Initialise the result.
-		$result = array();
-
-		// Split the numeric part off the filename.
-		foreach ($migrations as $file_path) {
-			// Split the id off the front.
-			list($id) = explode('-', basename($file_path), 2);
-
-			// Make sure it's an integer.
-			$id = (int) $id;
-
-			// Make sure it's unique.
-			if (array_key_exists($id, $result)) {
-				throw new Exception('Duplicate migration id: '.$id);
-			}
-
-			// Add it to the result array.
-			$result[$id] = $file_path;
-		}
-
-		return $result;
 	}
 
 	/**
@@ -302,7 +298,8 @@ abstract class Migration {
 		$number = end($parts);
 
 		foreach ($this->import_data as $table) {
-			$filename = APPPATH.sprintf('migrations/data/%s_%s.csv', $number, $table);
+			$filename = realpath(Kohana::config('ladder.migrations_path')).DS;
+			$filename .= sprintf('data/%s_%s.csv', $number, $table);
 			$this->table($table)->import_csv($filename);
 		}
 	}

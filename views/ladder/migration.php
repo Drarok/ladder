@@ -1,7 +1,7 @@
-<?php
+<?php echo '<?php', "\n"; ?>
 
-class MIGRATION_NAME extends Migration {
-	// protected $min_version = 'LADDER_VERSION';
+class <?php echo $migration_name; ?> extends Migration {
+	// protected $min_version = '<?php echo Ladder::VERSION; ?>';
 
 	public function up() {
 		// $this->create_table('new_table')

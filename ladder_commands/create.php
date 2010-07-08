@@ -1,43 +1,52 @@
 <?php
 
-// Always check the directory exists.
-if (! is_dir(APPPATH.'migrations')) {
-	mkdir(APPPATH.'migrations');
+// Fetch the path from the config.
+$migrations_path = Kohana::config('ladder.migrations_path');
+
+// Always check the directory exists first.
+if (! is_dir($migrations_path)) {
+	throw new Exception('Invalid directory: '.$migrations_path);
 }
 
 // Find all the files we should work with.
-$files = glob(APPPATH.'migrations/*'.EXT);
+$files = Migration::get_migration_paths();
 
-// Order by filename, as sometimes they come back in a different order.
-sort($files);
-
-// Grab the migration id from the last item in the array.
-list($migration_id) = explode('-', basename(end($files)));
+// Grab the id of the latest migration.
+$migration_id = Migration::get_latest_migration_id();
 
 // Try to use unnamed arg 2 if no name passed.
-if ($params['name'] === FALSE)
-	$params['name'] = $params['migrate-to'];
+if (! (bool) $migration_name = cli::option('name')) {
+	$migration_name = cli::argument(1);
+}
 
-// Add one to it by chopping out just the bit we need.
+if (! (bool) $migration_name) {
+	throw new Exception('You must specify a migration name');
+}
+
+// Generate the next migration id.
 $new_id = sprintf('%05d', 1 + (int) $migration_id);
 
 // Build the new filename.
-$file_name = $new_id.'-'.$params['name'].EXT;
+$file_name = $new_id.'-'.$migration_name.EXT;
 
 // Translate filename to classname.
 $migration_name = Migration::class_name($file_name);
 
 // Save the file and let the user know.
-$migration_file_path = APPPATH.'migrations/'.$file_name;
-file_put_contents($migration_file_path, template::migration($migration_name));
-echo 'Created ', $file_name, ".\n";
+$migration_file_path = realpath($migrations_path).DS.$file_name;
+
+$migration_view = View::factory('ladder/migration')
+	->set('migration_name', $migration_name)
+;
+
+file_put_contents($migration_file_path, $migration_view->render());
+echo 'Created ', $migration_file_path, ".\n";
 
 // Edit it if the options are set.
-if (TRUE === Config::item('editor.auto-edit') AND (bool) $editor = Config::item('editor.editor')) {
-	shell_exec($editor.' '.$migration_file_path);
+if (Kohana::config('ladder.create.auto_edit')) {
+	if ((bool) $editor = Kohana::config('ladder.create.editor')) {
+		shell_exec($editor.' '.$migration_file_path);
+	} else {
+		echo 'No editor set.', "\n";
+	}
 }
-
-if (TRUE === $params['with-data']) {
-	file_put_contents(APPPATH.'migrations/data/'.$file_name, template::data());
-	echo 'Created ', $file_name, " data template.\n";
-};
