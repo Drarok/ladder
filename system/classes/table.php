@@ -9,6 +9,7 @@ class Table {
 	private $created;
 	private $table_columns;
 	private $options;
+	private $insert_id;
 
 	public static function factory($name, $created = FALSE, $options = NULL) {
 		return new Table($name, $created, $options);
@@ -34,6 +35,8 @@ class Table {
 	public function __get($key) {
 		if ($key === 'name') {
 			return $this->name;
+		} elseif ($key === 'insert_id') {
+			return $this->insert_id;
 		}
 	}
 
@@ -303,10 +306,55 @@ class Table {
 		require_once(sprintf('migrations/data/%s-%s.php',
 			end(explode('_', get_class($migration))), strtolower($this->name)));
 	}
+
+	public function select($fields = NULL, $where = NULL, $fetch = 'assoc') {
+		// Escape fields, or use * by default.
+		if (! is_null($fields)) {
+			$fields = '`'.implode('`, `', (array) $fields).'`';
+		} else {
+			$fields = '*';
+		}
+
+		if ((bool) $where) {
+			// Use field => value pairs where available.
+			if (is_array($where)) {
+				$clauses = array();
+
+				foreach ($where as $field => $value) {
+					$clause = sql::escape($field, '`');
+					$clause .= ' = ';
+					$clause .= sql::escape($value);
+					$clauses[] = $clause;
+				}
+
+				// Compile into a string.
+				$where = 'WHERE '.implode(' AND ', $clauses);
+			}
+		}
+
+		// Run the query.
+		$query = Database::factory()->query(sprintf(
+			'SELECT %s FROM `%s` %s',
+			$fields, $this->name, $where
+		));
+
+		// Loop over the result set, saving to an array.
+		$func = 'mysql_fetch_'.$fetch;
+		while ((bool) $row = $func($query)) {
+			$result[] = $row;
+		}
+
+		// Free the result set.
+		mysql_free_result($query);
+
+		// Return the rows!
+		return $result;
+	}
 	
 	public function insert($data, $extra = '') {
 		$this->execute();
 		sql::insert($this->name, $data, $extra);
+		$this->insert_id = sql::insert_id();
 		return $this;
 	}
 	
