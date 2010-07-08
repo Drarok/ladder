@@ -29,10 +29,10 @@ class Ladder_Controller extends Controller {
 	}
 	
 	/**
-	 * Output some help text here.
+	 * Run the help command if no command/method specified.
 	 */
 	public function index() {
-		echo 'Help Text Here.', "\n";
+		$this->help();
 	}
 	
 	public function __call($method, $arguments) {
