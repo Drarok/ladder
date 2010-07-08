@@ -334,6 +334,10 @@ class sql {
 			$extra .= ' ';
 		self::$db->query(sprintf('INSERT %sINTO `%s` SET %s', $extra, $name, self::set_data($data)));
 	}
+
+	public static function insert_id() {
+		return self::$db->insert_id();
+	}
 	
 	public static function update($name, $data, $where) {
 		self::$db->query(sprintf('UPDATE `%s` SET %s WHERE %s', $name,

@@ -141,6 +141,10 @@ class Database {
 		}
 	}
 
+	public function insert_id() {
+		return mysql_insert_id($this->conn);
+	}
+
 	public function next_database($output = TRUE) {
 		++$this->database_id;
 
