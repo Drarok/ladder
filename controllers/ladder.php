@@ -28,18 +28,12 @@ class Ladder_Controller extends Controller {
 		echo $exception->getMessage(), "\n";
 	}
 	
-	/**
-	 * Run the help command if no command/method specified.
-	 */
-	public function index() {
-		$this->help();
-	}
-	
 	public function __call($method, $arguments) {
-		$filename = Kohana::find_file('ladder_commands', $method);
+		$filename = Kohana::find_file('ladder_commands', cli::command());
 		
 		if (! (bool) $filename) {
-			throw new Exception('Failed to find ladder command: '.$method);
+			$this->help();
+			return FALSE;
 		}
 
 		echo 'Executing ', $filename, "\n";
