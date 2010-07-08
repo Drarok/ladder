@@ -6,11 +6,8 @@ abstract class Migration {
 	 * @return array
 	 */
 	public static function get_migration_paths() {
-		// Get the path to the migrations.
-		$path = Kohana::config('ladder.migrations_path');
-		
 		// Get the file list and sort them.
-		$files = Kohana::list_files($path);
+		$files = Kohana::list_files('migrations');
 		sort($files);
 		
 		// Loop over each file and add it to the result array.
@@ -30,6 +27,23 @@ abstract class Migration {
 		
 		// Return!
 		return $result;
+	}
+	
+	/**
+	 * Return an array of migration ids.
+	 * @return array
+	 */
+	public static function get_migration_ids() {
+		return array_keys(Migration::get_migration_paths());
+	}
+
+	/**
+	 * Return the latest migration id.
+	 * @return integer
+	 */
+	public static function get_latest_migration_id() {
+		$migrations = Migration::get_migration_ids();
+		return end($migrations);
 	}
 	
 	public static function factory(Database $database, $id) {
@@ -111,15 +125,6 @@ abstract class Migration {
 	}
 
 	/**
-	 * Return an array of migration ids.
-	 * @return array
-	 */
-	public static function get_migration_ids() {
-		// Simply return the keys from get_migration_paths.
-		return array_keys(Migration::get_migration_paths());
-	}
-
-	/**
 	 * Get an associative array of <id> => <class_name>.
 	 * @return array
 	 */
@@ -142,11 +147,6 @@ abstract class Migration {
 		}
 
 		return $result;
-	}
-
-	public static function get_latest_migration_id() {
-		$migrations = Migration::get_migration_ids();
-		return end($migrations);
 	}
 	
 	/**

@@ -1,0 +1,10 @@
+<?php
+
+$config = array(
+	'migrations_table' => 'migrations',
+	
+	'create' => array(
+		'auto_edit' => TRUE,
+		'editor' => 'notepad',
+	),
+);
