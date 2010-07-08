@@ -1,1 +1,1 @@
-Ladder <?=LADDER_VERSION, "\n"?>
+Ladder (Kohana Module) v<?php echo Ladder::VERSION, "\n"; ?>

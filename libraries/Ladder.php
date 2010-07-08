@@ -1,37 +1,28 @@
 <?php
 
-final class Ladder {
-	public static $show_sql = FALSE;
+abstract class Ladder {
+	const VERSION = '0.5.0';
 	
-	protected $db;
-	protected $options;
-
-	public function __construct($migrate_to, $simulate = FALSE) {
-		$this->db = Database::factory();
-
-		while ($this->db->next_database()) {
-			try {
-				$this->migrate($migrate_to, $simulate);
-			} catch (Exception $e) {
-				echo "\nERROR: ", $e->getMessage(), "\n\n";
-			}
-		}
-	}
-
 	/**
 	 * Check the version is at least the passed-in one.
 	 * @param $version string Minimum version number required.
 	 */
 	public static function check_version_min($version) {
 		// If our version is less than the requested, throw an exception.
-		if (version_compare(LADDER_VERSION, $version, '<')) {
+		if (version_compare(Ladder::VERSION, $version, '<')) {
 			throw new Exception(sprintf(
 				'Failed version check. Required %s, but using %s.',
 				$version,
-				LADDER_VERSION
+				Ladder::VERSION
 			));
 		}
 	}
+
+	/**
+	 * Instance variables and methods.
+	 */
+	protected $db;
+	protected $options;
 
 	/**
 	 * Find all migrations that haven't been applied and run them.
@@ -126,38 +117,6 @@ final class Ladder {
 			} catch (Exception $e) {
 				echo "\n\tERROR: ", $e->getMessage(), "\n";
 			}
-		}
-	}
-
-
-	public static function select($sql, $field = FALSE, $value = FALSE) {
-		$res = Database::factory()->query($sql);
-		
-		if ($res === TRUE)
-			throw new Exception('Invalid query for select: '.$sql);
-
-		$rows = array();
-
-		if ((bool) $field AND $value === FALSE) {
-			// Single-value indexed array
-			while ($row = mysql_fetch_object($res))
-				$rows[] = $row->$field;
-			return $rows;
-		} elseif ((bool) $field AND (bool) $value) {
-			// name => value pairing
-			while ($row = mysql_fetch_object($res))
-				$rows[$row->$field] = $row->$value;
-			return $rows;
-		} elseif (! (bool) $field AND (bool) $value) {
-			// value => row pairing (id => object)
-			while ($row = mysql_fetch_object($res))
-				$rows[$row->$value] = $row;
-			return $rows;
-		} else {
-			// Straight array.
-			while ($row = mysql_fetch_object($res))
-				$rows[] = $row;
-			return $rows;
 		}
 	}
 }
