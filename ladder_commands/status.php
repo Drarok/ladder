@@ -9,44 +9,43 @@ $migration_names = Migration::get_migration_names();
 $latest_id = Migration::get_latest_migration_id();
 
 echo "Migration Status\n";
-echo 'Latest migration is ', $latest_id;
+echo "\t", 'Latest Available Migration: ', $latest_id;
 if ($params['verbose']) {
 	echo ' (', $migration_names[$latest_id], ')';
 }
 echo "\n";
 
-$db = Database::factory();
+$db = Database::instance();
 
-while ($db->next_database(FALSE)) {
-	// Grab the latest migration.
-	$max_migration = $db->get_current_migration();
+// Grab the latest migration from the database.
+$max_migration = ORM::factory('migration')->latest_id();
 
-	// Get the migrations from this database.
-	$db_migrations = $db->get_migrations();
+// Get the list of migrations from the database.
+$db_migrations = ORM::factory('migration')->select_list();
 
-	// Compare the two.
-	$missing_ids = array_diff($migration_ids, $db_migrations);
+// Compare the two.
+$missing_ids = array_diff($migration_ids, $db_migrations);
 
-	// Work out the status identifier.
-	if (! (bool) $missing_ids) {
-		// This database is up-to-date.
-		$status = '=';
-	} elseif (count($db_migrations) < $migration_count) {
-		// This database is out-of-date.
-		$status = '<';
-	} elseif (count($db_migrations) > $migration_count) {
-		// This database is more recent than the latest!
-		$status = '!';
-	} else {
-		// This should be impossible to reach.
-		$status = 'E';
-	}
+// Work out the status identifier.
+if (! (bool) $missing_ids) {
+	// This database is up-to-date.
+	$status = 'Up-to-date';
+} elseif (count($db_migrations) < $migration_count) {
+	// This database is out-of-date.
+	$status = 'Out of date';
+} elseif (count($db_migrations) > $migration_count) {
+	// This database is more recent than the latest!
+	$status = 'Migrations database integrity failure';
+} else {
+	// This should be impossible to reach.
+	$status = 'E';
+}
 
-	echo $status, "\t", $db->name, ': ', $max_migration, "\n";
+echo "\t", 'Latest Database Migration: ', $max_migration, "\n";
+echo "\t", 'Status: ', $status, "\n";
 
-	if ($params['verbose']) {
-		foreach ($missing_ids as $missing_id) {
-			echo "\t\t", $missing_id, ': ', $migration_names[$missing_id], "\n";
-		}
+if ($params['verbose']) {
+	foreach ($missing_ids as $missing_id) {
+		echo "\t\t", $missing_id, ': ', $migration_names[$missing_id], "\n";
 	}
 }

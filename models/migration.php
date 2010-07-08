@@ -20,4 +20,24 @@ class Migration_Model extends ORM {
 			.'`applied` DATETIME NOT NULL)'
 		);
 	}
+	
+	/**
+	 * Find and return the latest migration.
+	 */
+	public function latest_id() {
+		// Get the latest id from the database.
+		$latest_id = $this->db
+			->select(new Database_Expression('MAX(`migration`) AS `latest_id`'))
+			->from($this->table_name)
+			->get()
+			->current()
+			->latest_id
+		;
+		
+		if (! (bool) $latest_id) {
+			$latest_id = 0;
+		}
+		
+		return $latest_id;
+	}
 }
