@@ -5,6 +5,6 @@ $config = array(
 	
 	'create' => array(
 		'auto_edit' => TRUE,
-		'editor' => 'notepad',
+		'editor' => array_key_exists('EDITOR', $_ENV) ? $_ENV['EDITOR'] : 'vim',
 	),
 );
