@@ -4,55 +4,49 @@
  * Cherry-pick style migrations.
  */
 
-$migration_id = (int) $params['migrate-to'];
-
-if (! (bool) $migration_id OR $migration_id == '99999') {
-	echo 'Invalid migration id: ', $migration_id, "\n";
-	exit(1);
+// Use the second unnamed argument as the id.
+if (! (bool) $migration_id = (int) cli::argument(1)) {
+	throw new Ladder_Exception('Invalid migration id: %d', $migration_id);
 }
 
-$db = Database::factory();
+// Get a database instance.
+$db = Database::instance();
 
-while ($db->next_database()) {
-	// We must instantiate a fresh one because of should_run.
-	$migration = Migration::factory($db, $migration_id);
+// Get the migration.
+$migration = Migration::factory($migration_id);
 
-	if (! (bool) $migration) {
-		echo 'Error: Failed to get migration!', "\n";
-	} else {
-		// Don't run if the database already has this migration.
-		if ($db->has_migration($migration_id)) {
-			echo 'This database already contains migration ', $migration_id, "\n";
-			continue;
-		}
+if (! (bool) $migration) {
+	throw new Ladder_Exception('Failed to get migration %d', $migration_id);
+}
 
-		// Initialise our success var.
-		$success = FALSE;
+// Don't run if the database already has this migration.
+if (Migration_Model::exists($migration_id)) {
+	cli::log('info', 'This database already contains migration %d', $migration_id);
+	return;
+}
 
-		// Output some info.
-		echo 'Upgrading...', "\n";
+// Attempt to run the migration.
+try {
+	// Initialise the success flag.
+	$success = FALSE;
+	
+	// Run the up method.
+	$migration->_up();
 
-		// Attempt to run the migration.
-		try {
-			// Run the up method.
-			$migration->_up();
+	// Run the destructor.
+	unset($migration);
 
-			// Run the destructor.
-			unset($migration);
+	// Success!
+	$success = TRUE;
+} catch (Exception $e) {
+	cli::log('error', '%s', $e->getMessage());
+}
 
-			// Success!
-			$success = TRUE;
-		} catch (Exception $e) {
-			echo 'Error: ', $e->getMessage(), "\n";
-		}
-
-		// If it succeeded, or --force is specified, update the migrations.
-		if ($success OR $params['force']) {
-			try {
-				$db->add_migration($migration_id);
-			} catch (Exception $e) {
-				echo 'Error: ', $e->getMessage(), "\n";
-			}
-		}
+// If it succeeded, or --force is specified, update the migrations.
+if ($success OR cli::option('force')) {
+	try {
+		Migration_Model::create($migration_id);
+	} catch (Exception $e) {
+		cli::log('error', 'Failed to save migration state. %s', $e->getMessage());
 	}
 }

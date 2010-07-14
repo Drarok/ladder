@@ -1,154 +1,105 @@
 <?php
 
 abstract class Migration {
-	/**
-	 * Return an associative array of <id> => <migration_path>.
-	 * @return array
-	 */
-	public static function get_migration_paths() {
-		// Get the file list and sort them.
-		$files = Kohana::list_files('migrations');
-		sort($files);
-		
-		// Loop over each file and add it to the result array.
-		$result = array();
-		foreach ($files as $file) {
-			// Use this convenient PHP behaviour to get the numeric part.
-			$id = (int) basename($file);
-			
-			// Check for the key already existing.
-			if (array_key_exists($id, $result)) {
-				throw new Exception('Duplicate migration id: '.$id);
-			}
-			
-			// Add to the array.
-			$result[$id] = $file;
-		}
-		
-		// Return!
-		return $result;
-	}
+	protected static $migrations;
 	
 	/**
-	 * Return an array of migration ids.
-	 * @return array
+	 * Return an array of valid migration identifiers.
 	 */
-	public static function get_migration_ids() {
-		return array_keys(Migration::get_migration_paths());
+	public static function get_ids() {
+		// Check for cached values first.
+		if ((bool) self::$migrations) {
+			return self::$migrations;
+		}
+		
+		// Search the migrations path.
+		$files = glob(APPPATH.'migrations'.DIRECTORY_SEPARATOR.'*.php');
+		
+		// Initialise the result.
+		$result = array();
+		
+		// Loop over each, using PHP's duck typing to get just the numeric part.
+		foreach ($files as $file) {
+			// Strip the path part.
+			$file = basename($file);
+			
+			// Store just the numeric part.
+			$result[] = (int) $file;
+		}
+		
+		// Return the array and cache it.
+		return self::$migrations = $result;
 	}
-
+	
 	/**
 	 * Return the latest migration id.
-	 * @return integer
 	 */
-	public static function get_latest_migration_id() {
-		$migrations = Migration::get_migration_ids();
-		return end($migrations);
+	public static function latest_id() {
+		$migrations = self::get_ids();
+		return (int) end($migrations);
 	}
 	
-	public static function factory(Database $database, $id) {
-		// Initialise.
-		$instance = FALSE;
-
-		// Get the class name from the id.
-		$migration_file = Migration::file_name($id);
-
-		// If the file was found, get the class name.
-		if ((bool) $migration_file) {
-			require_once($migration_file);
-			$migration_class = Migration::class_name($migration_file);
-		}
-
-		// If we got a class name, instantiate.
-		if ((bool) $migration_class) {
-			$instance = new $migration_class($database);
-		}
-
-		return $instance;
-	}
-
+	
 	/**
-	 * Return the full path to a migration, based on its id.
-	 * @param integer The id to look for.
-	 * @return mixed Either a boolean FALSE on failure, or a string,
-	 * specifying the full path on success.
+	 * Return the filename of a Migration from its id.
 	 */
-	public static function file_name($id) {
-		// Work out the path.
-		$migration_path = Kohana::config('ladder.migrations_path');
-
-		// Append the filename skeleton.
-		$migration_path .= sprintf('%05d-*', (int) $id);
-
-		// Look on the filesystem for it.
-		$files = glob($migration_path);
-
-		// If we didn't find it, bail.
-		if (count($files) != 1) {
-			return FALSE;
+	public static function filename($id) {
+		// Build the path and skeleton.
+		$path = APPPATH.'migrations'.DIRECTORY_SEPARATOR;
+		$path .= sprintf('%05d*.php', (int) $id);
+		
+		// Search the filesystem.
+		$files = glob($path);
+		
+		if (1 != ($count = count($files))) {
+			throw new Ladder_Exception(
+				'Failed to location migration %d (found %d files)',
+				$id, $count
+			);
 		}
-
+		
+		// Return the 1st filename after auto-including it.
+		require_once($files[0]);
 		return $files[0];
 	}
-
+	
 	/**
-	 * Return the class name of a Migration, based off its file name.
-	 * @param $file_name mixed Either the id or filename of a migration. Can optionally include the path.
-	 * @return mixed Either boolean FALSE on failure, or the class name.
+	 * Return the human-readable name from a Migration id.
 	 */
-	public static function class_name($file_name) {
-		// Pass integers through Migration::class_name first.
-		if (is_numeric($file_name)) {
-			$file_name = Migration::file_name($file_name);
-			if ($file_name === FALSE) {
-				return FALSE;
-			}
-		}
-
-		// Make sure we only look at the filename.
-		$file_name = basename($file_name, EXT);
-
-		// Split the id and name apart.
-		$parts = explode('-', $file_name, 2);
-
-		// We should always end up with 2 parts.
-		if (count($parts) != 2) {
-			return FALSE;
-		}
-
-		// Return the class name.
-		return sprintf(
-			'%s_Migration_%05d',
-			implode('_', array_map('ucfirst', explode('_', $parts[1]))),
-			$parts[0]
-		);
-	}
-
-	/**
-	 * Get an associative array of <id> => <class_name>.
-	 * @return array
-	 */
-	public static function get_migration_names($full_name = FALSE) {
-		// Get the paths.
-		$migrations = Migration::get_migration_paths();
-
-		// Initialise our result array.
-		$result = array();
-
-		// Loop over each file and get its class name.
-		foreach ($migrations as $id => $migration_path) {
-			$migration_class = Migration::class_name($migration_path);
-
-			if (! (bool) $full_name) {
-				$migration_class = substr($migration_class, 0, -16);
-			}
-
-			$result[$id] = $migration_class;
-		}
-
-		return $result;
+	public static function name($id) {
+		// Get the filename, minus extension.
+		$file = basename(self::filename($id), '.php');
+		
+		// Split apart the id and name.
+		list($id, $name) = explode('-', $file, 2);
+		
+		// Split the name pieces up.
+		$parts = explode('_', $name);
+		
+		// Uppercase the first letter of each part and we're done!
+		return implode('_', array_map('ucfirst', $parts));
 	}
 	
+	/**
+	 * Return the classname from a Migration id.
+	 */
+	public static function classname($id) {
+		// Get the name.
+		$name = self::name($id);
+		
+		// Append the classtype and formatted id. Done!
+		return $name.sprintf('_Migration_%05d', $id);
+	}
+	
+	/**
+	 * Instantiate a Migration from its id.
+	 */
+
+	public static function factory($id) {
+		$class = self::classname($id);
+		return new $class;
+	}
+
 	/**
 	 * Instance Variables and Methods.
 	 */
@@ -166,22 +117,14 @@ abstract class Migration {
 	 */
 	protected $import_data = array();
 
-	public function __construct(Database $database) {
+	public function __construct() {
 		// Do we need to check version numbers?
 		if ((bool) $this->min_version) {
 			Ladder::check_version_min($this->min_version);
 		}
-
-		// Always store the database instance.
-		$this->db = $database;
-
-		// Save the current database name.
-		$this->database_name = $database->name;
-
-		// Detect if we should run or not, if they've set the $databases property.
-		if (is_array($this->databases)) {
-			$this->should_run = in_array($database->name, $this->databases);
-		}
+		
+		// Get a Database instance for the migrations to use.
+		$this->db = Database::instance();
 
 		// Get a reference to the grant manager singleton.
 		$this->permissions = Grant_Manager::instance();
@@ -205,8 +148,11 @@ abstract class Migration {
 	public function init() {
 	}
 
+	/**
+	 * Automatically call the execute method on any tables used in up() or down().
+	 */
 	public function execute() {
-		foreach ($this->tables as $id => $table) {
+		foreach ($this->tables as $table) {
 			$table->execute();
 		}
 
@@ -267,29 +213,12 @@ abstract class Migration {
 		return $this->tables[$name];
 	}
 
-	protected function drop_table($name) {
-		sql::drop_table($name);
-	}
-
-	protected function add_column($table, $name, $type, $options = array()) {
-		sql::add_column($table, array($name, $type, $options));
-	}
-
-	protected function drop_column($table, $name) {
-		sql::drop_column($table, $name);
-	}
-
-	protected function add_index($table, $name, $columns = FALSE, $options = array()) {
-		sql::add_index($table, array($name, $columns, $options));
-	}
-
-	protected function drop_index($table, $name) {
-		sql::drop_index($table, $name);
-	}
-
+	/**
+	 * Automatically import any data files specified in the Migration.
+	 */
 	protected function import_data() {
+		// Don't attempt to run if there's no data specified.
 		if (! (bool) $this->import_data) {
-			echo 'Warning: No import_data specified for migration ', get_class($this), "\n";
 			return;
 		}
 

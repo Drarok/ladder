@@ -76,4 +76,23 @@ abstract class cli {
 			}
 		}
 	}
+	
+	/**
+	 * Output the log message to stdout and pass to Kohana's logging methods.
+	 */
+	public static function log($level, $message, $arguments = NULL) {
+		// Get any arguments after the message.
+		$arguments = array_slice(func_get_args(), 2);
+		
+		// Format the message if there were arguments.
+		if ((bool) $arguments) {
+			$message = vsprintf($message, $arguments);
+		}
+		
+		// Pass to Kohana log method.
+		Kohana::log($level, $message);
+		
+		// Output to stdout.
+		echo $level, ' - ', $message, PHP_EOL;
+	}
 }

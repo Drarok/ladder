@@ -21,7 +21,7 @@ class Grant_Manager {
 	 * Constructor.
 	 */
 	public function __construct() {
-		$this->db = Database::factory();
+		$this->db = Database::instance();
 	}
 
 	/**

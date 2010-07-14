@@ -24,8 +24,9 @@ class Ladder_Controller extends Controller {
 	}
 	
 	public function _exception_handler($exception) {
-		echo 'Exception:', "\n";
+		echo 'Exception:', "\n\t";
 		echo $exception->getMessage(), "\n";
+		exit(1);
 	}
 	
 	public function __call($method, $arguments) {

@@ -1,39 +1,48 @@
 <?php
 
-global $params;
+cli::log('info', 'Migration Status');
 
-// Get info from the filesystem about our migrations.
-$migration_ids = Migration::get_migration_ids();
-$migration_count = count($migration_ids);
-$migration_names = Migration::get_migration_names();
-$latest_id = Migration::get_latest_migration_id();
-
-echo "Migration Status\n";
-echo "\t", 'Latest Available Migration: ', $latest_id;
-if ($params['verbose']) {
-	echo ' (', $migration_names[$latest_id], ')';
+$latest_id = Migration::latest_id();
+if (! cli::option('verbose')) {
+	cli::log(
+		'info', 'Latest Available Migration: %d', $latest_id
+	);
+} else {
+	cli::log(
+		'info', 'Latest Available Migration: %d (%s)',
+		$latest_id, Migration::name($latest_id)
+	);
 }
-echo "\n";
 
-$db = Database::instance();
+$latest_id = (int) Migration_Model::latest()->primary_key_value;
+if (! cli::option('verbose')) {
+	cli::log(
+		'info', 'Latest Applied Migration: %d', $latest_id
+	);
+} else {
+	cli::log(
+		'info', 'Latest Applied Migration: %d (%s)',
+		$latest_id, Migration::name($latest_id)
+	);
+}
 
 // Grab the latest migration from the database.
-$max_migration = ORM::factory('migration')->latest_id();
+$latest_db = Migration_Model::latest();
 
 // Get the list of migrations from the database.
-$db_migrations = ORM::factory('migration')->select_list();
+$db_migrations = ORM::factory('migration')->select_list(NULL, 'migration');
 
 // Compare the two.
-$missing_ids = array_diff($migration_ids, $db_migrations);
+$missing_ids = array_diff(Migration::get_ids(), $db_migrations);
 
 // Work out the status identifier.
 if (! (bool) $missing_ids) {
 	// This database is up-to-date.
 	$status = 'Up-to-date';
-} elseif (count($db_migrations) < $migration_count) {
+} elseif (count($db_migrations) < count(Migration::get_ids())) {
 	// This database is out-of-date.
 	$status = 'Out of date';
-} elseif (count($db_migrations) > $migration_count) {
+} elseif (count($db_migrations) > count(Migration::get_ids())) {
 	// This database is more recent than the latest!
 	$status = 'Migrations database integrity failure';
 } else {
@@ -41,11 +50,11 @@ if (! (bool) $missing_ids) {
 	$status = 'E';
 }
 
-echo "\t", 'Latest Database Migration: ', $max_migration, "\n";
-echo "\t", 'Status: ', $status, "\n";
-
 if (cli::option('verbose')) {
 	foreach ($missing_ids as $missing_id) {
-		echo "\t\t", $missing_id, ': ', $migration_names[$missing_id], "\n";
+		cli::log(
+			'info', 'Missing Migration %d: %s',
+			(int) $missing_id, Migration::name($missing_id)
+		);
 	}
 }
