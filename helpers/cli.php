@@ -35,8 +35,12 @@ abstract class cli {
 	 * Return the 'command' - the 1st non-option argument.
 	 */
 	public static function command() {
+		// Set the command if it's empty.
 		if (! (bool) self::$command) {
-			self::$command = self::argument(0);
+			// Get the 1st argument, if that's empty, set to 'help'.
+			if (! (bool) self::$command = self::argument(0)) {
+				self::$command = 'help';
+			}
 		}
 		
 		return self::$command;
