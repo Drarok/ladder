@@ -24,8 +24,19 @@ class Ladder_Controller extends Controller {
 	}
 	
 	public function _exception_handler($exception) {
-		echo 'Exception:', "\n\t";
-		echo $exception->getMessage(), "\n";
+		cli::log('error', 'Exception: %s', $exception->getMessage());
+		cli::log('error', 'File: %s (%d)', $exception->getFile(), $exception->getLine());
+		
+		// Loop over each trace.
+		foreach ($exception->getTrace() as $stack_level => $trace) {
+			// Get info from the trace.
+			$file = array_key_exists('file', $trace) ? $trace['file'] : FALSE;
+			$line = array_key_exists('line', $trace) ? $trace['line'] : FALSE;
+			
+			// Output trace info.
+			cli::log('error', 'Stack %d: %s (%d)', $stack_level, $file, $line);
+		}
+
 		exit(1);
 	}
 	
