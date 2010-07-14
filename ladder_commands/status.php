@@ -44,7 +44,7 @@ if (! (bool) $missing_ids) {
 echo "\t", 'Latest Database Migration: ', $max_migration, "\n";
 echo "\t", 'Status: ', $status, "\n";
 
-if ($params['verbose']) {
+if (cli::option('verbose')) {
 	foreach ($missing_ids as $missing_id) {
 		echo "\t\t", $missing_id, ': ', $migration_names[$missing_id], "\n";
 	}
