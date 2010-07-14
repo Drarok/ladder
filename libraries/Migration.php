@@ -227,8 +227,14 @@ abstract class Migration {
 		$number = end($parts);
 
 		foreach ($this->import_data as $table) {
-			$filename = realpath(Kohana::config('ladder.migrations_path')).DS;
-			$filename .= sprintf('data/%s_%s.csv', $number, $table);
+			// Build the path to the file.
+			$filename = sprintf(
+				APPPATH.'migrations'.DIRECTORY_SEPARATOR
+				.'data'.DIRECTORY_SEPARATOR.'%s_%s.csv',
+				$number, $table
+			);
+			
+			// Import via the Table class.
 			$this->table($table)->import_csv($filename);
 		}
 	}
