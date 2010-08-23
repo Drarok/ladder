@@ -11,6 +11,10 @@ define('LADDER_VERSION', trim(file_get_contents(SYSPATH.'VERSION')));
 // Import all the other classes etc. Use autoload later?
 require_once(SYSPATH.'core/imports'.EXT);
 
+// Set the error and exception handlers as early as possible.
+set_error_handler(array('ladder', 'error_handler'));
+set_exception_handler(array('ladder', 'exception_handler'));
+
 // Set up defaults for the command-line here.
 global $params;
 

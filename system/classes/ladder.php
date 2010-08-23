@@ -160,4 +160,38 @@ final class Ladder {
 			return $rows;
 		}
 	}
+
+	public static function error_handler($errno, $errstr, $errfile = NULL, $errline = NULL) {
+		echo 'PHP Error: ', "\t", $errno, PHP_EOL;
+		echo "\t\t", $errstr, PHP_EOL;
+
+		if ((bool) $errfile) {
+			echo "File:\t", $errfile, (bool) $errline ? ' ['.$errline.']' : FALSE, PHP_EOL;
+		}
+	}
+
+	public static function exception_handler($exception) {
+		echo sprintf(
+			'Uncaught exception \'%s\' with message \'%s\' in %s [%s]',
+			get_class($exception), $exception->getMessage(),
+			$exception->getFile(), $exception->getLine()
+		), PHP_EOL;
+		
+		// Get the stack trace information.
+		$trace = $exception->getTrace();
+		$traceline = '#%s %s(%s): %s(%s)';
+		foreach ($trace as $key => $stackPoint) {
+			// Convert the arguments to their type.
+			$stackPoint['args'] = array_map('gettype', $stackPoint['args']);
+
+			echo sprintf(
+				$traceline, $key, $stackPoint['file'],
+				$stackPoint['line'],
+				array_key_exists('class', $stackPoint)
+					? $stackPoint['class'].'->'.$stackPoint['function']
+					: $stackPoint['function'],
+				implode(', ', $stackPoint['args'])
+			), PHP_EOL;
+		}
+	}
 }
