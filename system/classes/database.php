@@ -135,7 +135,20 @@ class Database {
 		$res = mysql_query($sql, $this->conn);
 
 		if (! (bool) $res) {
-			throw new Exception(mysql_error($this->conn));
+			$error = mysql_error($this->conn);
+
+			$warnings = array();
+
+			// See if we need to ask for warnings information.
+			if (strpos($error, 'Check warnings') !== FALSE) {
+				$warn_query = mysql_query('SHOW WARNINGS', $this->conn);
+
+				while ((bool) $warn_row = mysql_fetch_object($warn_query)) {
+					$warnings[] = $warn_row->Level.' - '.$warn_row->Message;
+				}
+			}
+
+			throw new Exception($error.' '.implode(', ', $warnings));
 		} else {
 			return $res;
 		}
