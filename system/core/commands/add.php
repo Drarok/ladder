@@ -37,6 +37,16 @@ while ($db->next_database()) {
 			// Run the up method.
 			$migration->_up();
 
+			// Check if we need to run the test method.
+			if ($params['run-tests'] AND method_exists($migration, 'test')) {
+				// Make sure it's been run.
+				$migration->execute();
+
+				// Run the tests.
+				echo 'Testing...', "\n";
+				$migration->test();
+			}
+
 			// Run the destructor.
 			unset($migration);
 

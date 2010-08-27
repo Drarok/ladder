@@ -112,6 +112,7 @@ final class Ladder {
 					global $params;
 					if ($method === 'up' AND (bool) $params['run-tests'] AND method_exists($mig, 'test')) {
 						$mig->execute();
+						echo "\t", $migration_name, '->test()', "\n";
 						$mig->test();
 					}
 				}
