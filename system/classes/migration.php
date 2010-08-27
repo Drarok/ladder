@@ -267,8 +267,8 @@ abstract class Migration {
 		return $this->tables[$name];
 	}
 
-	protected function drop_table($name) {
-		sql::drop_table($name);
+	protected function drop_table($name, $if_exists = FALSE) {
+		sql::drop_table($name, $if_exists);
 	}
 
 	protected function add_column($table, $name, $type, $options = array()) {

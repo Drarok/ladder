@@ -64,8 +64,12 @@ class sql {
 			self::$db->query(self::add_trigger(FALSE, $trigger));
 	}
 
-	public static function drop_table($name) {
-		self::$db->query('DROP TABLE `'.$name.'`');
+	public static function drop_table($name, $if_exists = FALSE) {
+		if ((bool) $if_exists) {
+			self::$db->query('DROP TABLE IF EXISTS `'.$name.'`');
+		} else {
+			self::$db->query('DROP TABLE `'.$name.'`');
+		}
 	}
 
 	public static function rename_table($from, $to) {
