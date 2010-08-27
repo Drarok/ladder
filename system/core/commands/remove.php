@@ -18,10 +18,10 @@ while ($db->next_database()) {
 	$migration = Migration::factory($db, $migration_id);
 
 	if (! (bool) $migration) {
-		echo 'Error: Failed to get migration!', "\n";
+		echo "\t", 'Error: Failed to get migration!', "\n";
 	} else {
 		if (! $db->has_migration($migration_id)) {
-			echo 'This database does not contain migration ', $migration_id, "\n";
+			echo "\t", 'This database does not contain migration ', $migration_id, "\n";
 			continue;
 		}
 
@@ -29,7 +29,7 @@ while ($db->next_database()) {
 		$success = FALSE;
 
 		// Output info.
-		echo 'Downgrading...', "\n";
+		echo "\t", 'Downgrading...', "\n";
 
 		// Attempt to run the migration.
 		try {
@@ -42,7 +42,7 @@ while ($db->next_database()) {
 			// Success!
 			$success = TRUE;
 		} catch (Exception $e) {
-			echo 'Error: ', $e->getMessage(), "\n";
+			echo "\t", 'Error: ', $e->getMessage(), "\n";
 		}
 
 		// If it succeeded, or --force is specified, update the migrations.
@@ -50,7 +50,7 @@ while ($db->next_database()) {
 			try {
 				$db->remove_migration($migration_id);
 			} catch (Exception $e) {
-				echo 'Error: ', $e->getMessage(), "\n";
+				echo "\t", 'Error: ', $e->getMessage(), "\n";
 			}
 		}
 	}

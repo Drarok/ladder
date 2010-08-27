@@ -22,7 +22,7 @@ while ($db->next_database()) {
 	} else {
 		// Don't run if the database already has this migration.
 		if ($db->has_migration($migration_id)) {
-			echo 'This database already contains migration ', $migration_id, "\n";
+			echo "\t", 'This database already contains migration ', $migration_id, "\n";
 			continue;
 		}
 
@@ -30,7 +30,7 @@ while ($db->next_database()) {
 		$success = FALSE;
 
 		// Output some info.
-		echo 'Upgrading...', "\n";
+		echo "\t", 'Upgrading...', "\n";
 
 		// Attempt to run the migration.
 		try {
@@ -43,7 +43,7 @@ while ($db->next_database()) {
 				$migration->execute();
 
 				// Run the tests.
-				echo 'Testing...', "\n";
+				echo "\t", 'Testing...', "\n";
 				$migration->test();
 			}
 
@@ -53,7 +53,7 @@ while ($db->next_database()) {
 			// Success!
 			$success = TRUE;
 		} catch (Exception $e) {
-			echo 'Error: ', $e->getMessage(), "\n";
+			echo "\t", 'Error: ', $e->getMessage(), "\n";
 		}
 
 		// If it succeeded, or --force is specified, update the migrations.
@@ -61,7 +61,7 @@ while ($db->next_database()) {
 			try {
 				$db->add_migration($migration_id);
 			} catch (Exception $e) {
-				echo 'Error: ', $e->getMessage(), "\n";
+				echo "\t", 'Error: ', $e->getMessage(), "\n";
 			}
 		}
 	}
