@@ -15,6 +15,14 @@ class Table {
 		return new Table($name, $created, $options);
 	}
 
+	public static function exists($name) {
+		$db = Database::factory();
+		$res = $db->query(sprintf(
+			'SHOW TABLES LIKE \'%s\'', $db->escape_value($name)
+		));
+		return mysql_num_rows($res) == 1;
+	}
+
 	public function __construct($name, $created = FALSE, $options = NULL) {
 		$this->name = $name;
 		$this->created = $created;
