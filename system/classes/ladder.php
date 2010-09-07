@@ -195,4 +195,43 @@ final class Ladder {
 			), PHP_EOL;
 		}
 	}
+
+	/**
+	 * Build a path to a file or directory, prepended with the application path.
+	 * @param mixed $* Variable number of parameters, appended together to
+	 * build the final path.
+	 * @return string A full path to a file/directory.
+	 * @since 0.4.8
+	 */
+	public static function path() {
+		// Get the arguments passed to the method.
+		$params = func_get_args();
+		
+		// Prepend the application path.
+		array_unshift($params, rtrim(APPPATH, DS));
+		
+		return implode(DS, $params);
+	}
+	
+	/**
+	 * Get the contents of a file, using the Ladder::path() helper method
+	 * to build the path.
+	 * @param mixed $* Variable number of parameters, appended together to
+	 * build the final path.
+	 * @return string Contents of the file requested.
+	 * @since 0.4.8
+	 */
+	public static function file() {
+		// Get the params passed and pass through Ladder::path.
+		$params = func_get_args();
+		$path = call_user_func_array(array('Ladder', 'path'), $params);
+		
+		// Throw an exception if the file doesn't exist.
+		if (! file_exists($path)) {
+			throw new Exception('No such file at path: '.$path);
+		}
+		
+		// Return the contents.
+		return file_get_contents($path);
+	}
 }
