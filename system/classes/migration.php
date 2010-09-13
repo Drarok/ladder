@@ -289,7 +289,6 @@ abstract class Migration {
 
 	protected function import_data() {
 		if (! (bool) $this->import_data) {
-			echo 'Warning: No import_data specified for migration ', get_class($this), "\n";
 			return;
 		}
 
@@ -298,6 +297,7 @@ abstract class Migration {
 		$number = end($parts);
 
 		foreach ($this->import_data as $table) {
+			echo "\t\t", 'Importing data for ', $table, PHP_EOL;
 			$filename = APPPATH.sprintf('migrations/data/%s_%s.csv', $number, $table);
 			$this->table($table)->import_csv($filename);
 		}
