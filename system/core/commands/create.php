@@ -37,7 +37,9 @@ if (TRUE === Config::item('editor.auto-edit') AND (bool) $editor = Config::item(
 	shell_exec($editor.' '.$migration_file_path);
 }
 
+/*
 if (TRUE === $params['with-data']) {
 	file_put_contents(APPPATH.'migrations/data/'.$file_name, template::data());
 	echo 'Created ', $file_name, " data template.\n";
 };
+ */
