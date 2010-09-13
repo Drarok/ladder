@@ -19,15 +19,15 @@ set_exception_handler(array('ladder', 'exception_handler'));
 global $params;
 
 $params = array(
-	'config' => 'default',
+	'config' => Config::item('config.config', 'default'),
 	'name' => FALSE,
 	'migrate-to' => 99999,
-	'with-data' => FALSE,
+	'with-data' => Config::item('config.with-data', TRUE),
 	'simulate' => FALSE,
 	'database' => FALSE,
-	'run-tests' => FALSE,
-	'show-sql' => FALSE,
-	'verbose' => FALSE,
+	'run-tests' => Config::item('config.run-tests', FALSE),
+	'show-sql' => Config::item('config.show-sql', FALSE),
+	'verbose' => Config::item('config.verbose', FALSE),
 	'force' => FALSE,
 	'version' => FALSE,
 );

@@ -4,7 +4,7 @@ class Config {
 	protected static $cache = array();
 
 	public static $config_name = 'default';
-	public static $general_files = array('editor', 'table');
+	public static $general_files = array('config', 'editor', 'table');
 
 	public static function item($name, $default = FALSE) {
 		$parts = explode('.', $name, 2);

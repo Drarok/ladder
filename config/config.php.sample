@@ -1,0 +1,9 @@
+<?php
+
+$config = array(
+	'config' => 'default',
+	'with-data' => TRUE,
+	'run-tests' => FALSE,
+	'show-sql' => FALSE,
+	'verbose' => FALSE,
+);
