@@ -242,6 +242,27 @@ abstract class Migration {
 	}
 
 	/**
+	 * Override __get to add support for id and id_padded properties.
+	 * @since 0.4.10
+	 */
+	public function __get($key) {
+		if ($key === 'id' OR $key === 'id_padded') {
+			// Explode the class name, it's like Something_Name_Migraton_00001
+			$parts = explode('_', get_class($this));
+			
+			// Get the last element from the array.
+			$number = end($parts);
+			
+			// Return the id as an integer or string.
+			if ($key === 'id') {
+				return (int) $number;
+			} elseif ($key === 'id_padded') {
+				return $number;
+			}
+		}
+	}
+
+	/**
 	 * Create an instance of Table representing a new table.
 	 * @return Table 
 	 * @param string $name Name of the new table to create.
@@ -301,5 +322,19 @@ abstract class Migration {
 			$filename = APPPATH.sprintf('migrations/data/%s_%s.csv', $number, $table);
 			$this->table($table)->import_csv($filename);
 		}
+	}
+
+	/**
+	 * Load data from a file in the 'data' directory, auto-prefixing the
+	 * filename with the migration number.
+	 * @param string $name File to load (exclude the migration number).
+	 * @since 0.4.10
+	 */
+	protected function data($name) {
+		// Files are always lower-case.
+		$name = strtolower($name);
+		
+		// Use the ladder class to get the file data.
+		return Ladder::file('migrations', 'data', $this->id_padded.'_'.$name);
 	}
 }
