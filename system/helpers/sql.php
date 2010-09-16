@@ -324,11 +324,26 @@ class sql {
 
 		return $sql;
 	}
-	
-	protected static function set_data($data, $join = ', ') {
+
+	/**
+	 * Build a string from a field => value associative array that can be used
+	 * in a SET or WHERE clause.
+	 * @param array $data Field to value associative array.
+	 * @param string $join Glue to use between field-value pairs.
+	 * @param boolean $compare Sets comparison mode, where ' = NULL'
+	 * becomes 'IS NULL'. @since 0.4.12.
+	 */
+	protected static function set_data($data, $join = ', ', $compare = FALSE) {
 		$values = array();
-		foreach ($data as $field => $value)
-			$values[] = sprintf('%s=%s', self::escape($field, '`'), self::escape($value));
+		foreach ($data as $field => $value) {
+			if ((bool) $compare AND $value === NULL) {
+				// Handle NULLs as a comparison.
+				$values[] = sprintf('%s IS NULL', self::escape($field, '`'));
+			} else {
+				// SET style.
+				$values[] = sprintf('%s = %s', self::escape($field, '`'), self::escape($value));
+			}
+		}
 		
 		return implode($join, $values);
 	}
@@ -344,13 +359,17 @@ class sql {
 	}
 	
 	public static function update($name, $data, $where) {
-		self::$db->query(sprintf('UPDATE `%s` SET %s WHERE %s', $name,
-			self::set_data($data), self::set_data($where, ' AND ')));
+		self::$db->query(sprintf(
+			'UPDATE `%s` SET %s WHERE %s', $name,
+			self::set_data($data), self::set_data($where, ' AND ', TRUE)
+		));
 	}
 	
 	public static function delete($name, $where) {
-		self::$db->query(sprintf('DELETE FROM `%s` WHERE %s', $name,
-			self::set_data($where, ' AND ')));
+		self::$db->query(sprintf(
+			'DELETE FROM `%s` WHERE %s', $name,
+			self::set_data($where, ' AND ', TRUE)
+		));
 	}
 
 	public static function truncate($name) {
