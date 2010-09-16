@@ -23,7 +23,9 @@ abstract class Migration {
 
 	/**
 	 * $unimport_key_fields mixed Either FALSE to use all fields in the CSV,
-	 * or an array of fields to use as the WHERE clause when unmporting.
+	 * or an array of arrays containing the fields to use as the WHERE clause
+	 * when unmporting.
+	 * e.g. array('table1' => 'id', 'table_2' => array('tab_id', 'name')).
 	 */
 	protected $unimport_key_fields = FALSE;
 
@@ -365,7 +367,15 @@ abstract class Migration {
 		foreach ($tables as $table) {
 			echo "\t\t", 'Unimporting data for ', $table, PHP_EOL;
 			$filename = APPPATH.sprintf('migrations/data/%s_%s.csv', $this->id_padded, $table);
-			$this->table($table)->unimport_csv($filename, $this->unimport_key_fields);
+
+			// Check for specified key fields.
+			$key_fields = array_key_exists($table, $this->unimport_key_fields)
+				? (array) $this->unimport_key_fields[$table]
+				: FALSE
+			;
+
+			// Pass on to the Table class.
+			$this->table($table)->unimport_csv($filename, $key_fields);
 		}
 	}
 
