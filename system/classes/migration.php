@@ -369,10 +369,15 @@ abstract class Migration {
 			$filename = APPPATH.sprintf('migrations/data/%s_%s.csv', $this->id_padded, $table);
 
 			// Check for specified key fields.
-			$key_fields = array_key_exists($table, $this->unimport_key_fields)
-				? (array) $this->unimport_key_fields[$table]
-				: FALSE
-			;
+			if ((bool) $this->unimport_key_fields) {
+				$key_fields = array_key_exists($table, $this->unimport_key_fields)
+					? (array) $this->unimport_key_fields[$table]
+					: FALSE
+				;
+			} else {
+				// No key fields specified at all.
+				$key_fields = FALSE;
+			}
 
 			// Pass on to the Table class.
 			$this->table($table)->unimport_csv($filename, $key_fields);
