@@ -21,6 +21,12 @@ abstract class Migration {
 	 */
 	protected $unimport_data = TRUE;
 
+	/**
+	 * $unimport_key_fields mixed Either FALSE to use all fields in the CSV,
+	 * or an array of fields to use as the WHERE clause when unmporting.
+	 */
+	protected $unimport_key_fields = FALSE;
+
 	public static function factory(Database $database, $id) {
 		// Initialise.
 		$instance = FALSE;
@@ -359,7 +365,7 @@ abstract class Migration {
 		foreach ($tables as $table) {
 			echo "\t\t", 'Unimporting data for ', $table, PHP_EOL;
 			$filename = APPPATH.sprintf('migrations/data/%s_%s.csv', $this->id_padded, $table);
-			$this->table($table)->unimport_csv($filename);
+			$this->table($table)->unimport_csv($filename, $this->unimport_key_fields);
 		}
 	}
 

@@ -5,6 +5,7 @@ class MIGRATION_NAME extends Migration {
 	// protected $databases = FALSE;
 	// protected $import_data = array();
 	// protected $unimport_data = TRUE;
+	// protected $unimport_key_fields = FALSE;
 
 	public function up() {
 		// $this->create_table('new_table')

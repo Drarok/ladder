@@ -453,11 +453,28 @@ class Table {
 	/**
 	 * Unimport a CSV file, deleting data that exists and matches the CSV.
 	 * @param string $path Path to the csv file to unimport.
+	 * @param mixed $key_fields FALSE to use all fields, or an array of fields
+	 * to use in the WHERE clause. @since 0.4.12
 	 * @since 0.4.11
 	 */
-	public function unimport_csv($path) {
+	public function unimport_csv($path, $key_fields = FALSE) {
 		foreach ($this->get_csv_data($path) as $row) {
-			$this->delete($row);
+			if ($key_fields === FALSE) {
+				// If no key fields specified, use all of them.
+				$where = $row;
+			} else {
+				// Loop over the fields specified, fetching the values.
+				$where = array();
+				foreach ($key_fields as $field_name) {
+					$where[$field_name] = array_key_exists($field_name, $row)
+						? $row[$field_name]
+						: NULL
+					;
+				}
+			}
+
+			// Delete the data as specified.
+			$this->delete($where);
 		}
 
 		return $this;
