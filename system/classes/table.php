@@ -428,6 +428,11 @@ class Table {
 				}
 			}
 
+			// Make sure the number of elements matches by padding the end with NULL.
+			while (count($row) < count($headers)) {
+				$row[] = NULL;
+			}
+
 			// Combine the data into an associative array and add to result.
 			$result[] = array_combine($headers, $row);
 		}
