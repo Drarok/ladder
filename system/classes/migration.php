@@ -9,10 +9,17 @@ abstract class Migration {
 	protected $min_version = FALSE;
 
 	/**
-	 * $import_data array Table names to import. Prefixed with the migration number
-	 * when loaded from migrations/data. eg 'table' becomes '00001_table.csv'.
+	 * $import_data array Table names to import. Prefixed with the migration
+	 * number when loaded from migrations/data. eg 'table' becomes
+	 * '00001_table.csv'.
 	 */
 	protected $import_data = array();
+
+	/**
+	 * $unimport_data mixed Either FALSE to disable unimport, TRUE to mirror
+	 * the $import_data property, or an explicit array of tables to unimport.
+	 */
+	protected $unimport_data = TRUE;
 
 	public static function factory(Database $database, $id) {
 		// Initialise.
@@ -232,7 +239,13 @@ abstract class Migration {
 					try {
 						$this->import_data();
 					} catch (Exception $e) {
-						echo "\t", 'Warning: ', $e->getMessage(), ' when trying to import.', "\n";
+						echo "\t", 'Warning: ', $e->getMessage(), ' when trying to import.', PHP_EOL;
+					}
+				} elseif ($method == 'down' AND (bool) $params['with-data']) {
+					try {
+						$this->unimport_data();
+					} catch (Exception $e) {
+						echo "\t", 'Warning: ', $e->getMessage(), ' when trying to unimport.', PHP_EOL;
 					}
 				}
 
@@ -313,14 +326,40 @@ abstract class Migration {
 			return;
 		}
 
-		// Explode the class, it's like Something_Name_Migraton_00001
-		$parts = explode('_', get_class($this));
-		$number = end($parts);
-
 		foreach ($this->import_data as $table) {
 			echo "\t\t", 'Importing data for ', $table, PHP_EOL;
-			$filename = APPPATH.sprintf('migrations/data/%s_%s.csv', $number, $table);
+			$filename = APPPATH.sprintf('migrations/data/%s_%s.csv', $this->id_padded, $table);
 			$this->table($table)->import_csv($filename);
+		}
+	}
+
+	/**
+	 * Delete data specified in the import_data property, the opposite
+	 * of import_data().
+	 * @since 0.4.11
+	 */
+	protected function unimport_data() {
+		// Return immediately if unimport is disabled.
+		if (! (bool) $this->unimport_data) {
+			return;
+		}
+
+		// Use the tables specified in import_data if unimport_data isn't explicit.
+		if ($this->unimport_data === TRUE) {
+			$tables = $this->import_data;
+		} else {
+			$tables = $this->unimport_data;
+		}
+
+		// Check there's actually some tables to work with.
+		if (! (bool) $tables) {
+			return;
+		}
+
+		foreach ($tables as $table) {
+			echo "\t\t", 'Unimporting data for ', $table, PHP_EOL;
+			$filename = APPPATH.sprintf('migrations/data/%s_%s.csv', $this->id_padded, $table);
+			$this->table($table)->unimport_csv($filename);
 		}
 	}
 

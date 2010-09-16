@@ -395,20 +395,32 @@ class Table {
 		return $this;
 	}
 
-	public function import_csv($path) {
-		// Check the file exists.
+	/**
+	 * Load a CSV file and return its data as an associative array.
+	 * @param string $path Path to the CSV file.
+	 * @since 0.4.11
+	 */
+	private function get_csv_data($path) {
+		// Fail if the file doesn't exist.
 		if (! file_exists($path)) {
 			throw new Exception('Cannot find file: '.$path);
 		}
 
-		// Open the CSV file.
 		$csv = fopen($path, 'r');
 
 		// Always assume the 1st row is the field names.
 		$headers = fgetcsv($csv);
 
-		// Loop over the file and insert records.
-		while ($row = fgetcsv($csv)) {
+		// Initialise the result array.
+		$result = array();
+
+		// Loop over the file and add array elements.
+		while (! feof($csv)) {
+			// Skip blank lines, fgetcsv will return a single-element (NULL) array.
+			if (! (bool) $row = fgetcsv($csv)) {
+				continue;
+			}
+
 			// Change any strings of 'null' into actual NULL values.
 			foreach ($row as &$cell) {
 				if (strtolower($cell) == 'null') {
@@ -416,15 +428,32 @@ class Table {
 				}
 			}
 
-			// Combine the data into an associative array.
-			$data = array_combine($headers, $row);
-
-			// Insert into the table.
-			$this->insert($data);
+			// Combine the data into an associative array and add to result.
+			$result[] = array_combine($headers, $row);
 		}
 
-		// Close the file.
+		// Close the file and return the data.
 		fclose($csv);
+		return $result;
+	}
+
+	public function import_csv($path) {
+		foreach ($this->get_csv_data($path) as $row) {
+			$this->insert($row);
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Unimport a CSV file, deleting data that exists and matches the CSV.
+	 * @param string $path Path to the csv file to unimport.
+	 * @since 0.4.11
+	 */
+	public function unimport_csv($path) {
+		foreach ($this->get_csv_data($path) as $row) {
+			$this->delete($row);
+		}
 
 		return $this;
 	}
