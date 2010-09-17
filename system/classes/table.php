@@ -479,4 +479,29 @@ class Table {
 
 		return $this;
 	}
+
+	/**
+	 * Grant permissions to users for this table.
+	 * @param mixed $permissions String or array of strings to grant.
+	 * @param mixed $users String or array of user@host strings.
+	 * @since 0.4.13
+	 */
+	public function grant($permissions, $users) {
+		// Make sure any outstanding changes are performed first.
+		$this->execute();
+
+		// Get a database instance.
+		$db = Database::factory();
+
+		// Get a grant manager instance.
+		$grant = Grant_Manager::instance();
+
+		// Loop over each user and execute the grant manager.
+		foreach ((array) $users as $user) {
+			$grant->grant($privileges, $object, $user);
+		}
+
+		return $this;
+	}
+
 }
