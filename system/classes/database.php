@@ -8,22 +8,19 @@ class Database {
 	protected static $instance;
 	
 	public static function factory() {
-		if (! self::$instance)
-			new Database;
+		if (! (bool) self::$instance) {
+			self::$instance = new Database;
+		}
 		
 		return self::$instance;
 	}
 
 	public function __construct() {
-		$this->connect();
-
-		if (is_string($this->databases = Config::item('database.database')))
+		if (is_string($this->databases = Config::item('database.database'))) {
 			$this->databases = array($this->databases);
+		}
 
 		$this->database_id = -1;
-		
-		if (! self::$instance)
-			self::$instance = $this;
 	}
 
 	public function __get($key) {
@@ -73,6 +70,11 @@ class Database {
 	}
 
 	protected function connect() {
+		// No need to connect again if we have a resource.
+		if ((bool) $this->conn) {
+			return;
+		}
+
 		// Grab the port, prefix with colon if it's set.
 		if ((bool) $port = Config::item('database.port')) {
 			$port = ':'.$port;
@@ -117,10 +119,13 @@ class Database {
 	}
 
 	public function escape_value($value) {
+		$this->connect();
 		return mysql_real_escape_string($value, $this->conn);
 	}
 
 	public function query($sql, $show_sql = NULL) {
+		$this->connect();
+
 		// If nothing passed, use params to set option.
 		if ($show_sql === NULL) {
 			global $params;
@@ -159,6 +164,8 @@ class Database {
 	}
 
 	public function next_database($output = TRUE) {
+		$this->connect();
+
 		++$this->database_id;
 
 		if ($this->database_id < count($this->databases)) {
