@@ -356,7 +356,7 @@ abstract class Migration {
 		if ($this->unimport_data === TRUE) {
 			$tables = $this->import_data;
 		} else {
-			$tables = $this->unimport_data;
+			$tables = (array) $this->unimport_data;
 		}
 
 		// Check there's actually some tables to work with.
