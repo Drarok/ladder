@@ -16,6 +16,20 @@ abstract class Migration {
 	protected $import_data = array();
 
 	/**
+	 * $import_update mixed Should imports perform and UPDATE instead of an
+	 * INSERT? Either boolean TRUE/FALSE for all imports, or an array of 
+	 * table names.
+	 */
+	protected $import_update = FALSE;
+
+	/**
+	 * $import_key_fields array This *must* be set when $import_update is TRUE.
+	 * Specify the fields to use in the WHERE clause when importing via UPDATE.
+	 * e.g. array('table_one' => 'id', 'table_two' => array('tab_id', 'name'));
+	 */
+	protected $import_key_fields = FALSE;
+
+	/**
 	 * $unimport_data mixed Either FALSE to disable unimport, TRUE to mirror
 	 * the $import_data property, or an explicit array of tables to unimport.
 	 */
@@ -334,10 +348,40 @@ abstract class Migration {
 			return;
 		}
 
-		foreach ($this->import_data as $table) {
-			echo "\t\t", 'Importing data for ', $table, PHP_EOL;
+		foreach ((array) $this->import_data as $table) {
+			// We should update if import_update is TRUE,
+			// or contains the table name in an array.
+			$use_update = ($this->import_update === TRUE) OR
+				(
+					is_array($this->import_update) AND
+					in_array($table, $this->import_update)
+				);
+
+			// Inform the user what we're up to.
+			echo "\t\t",
+				$use_update ? 'Updating' : 'Importing',
+				' data for ', $table, PHP_EOL
+			;
+
+			// Make sure key fields are set.
+			if ($use_update) {
+				if (array_key_exists($table, $this->import_key_fields)) {
+					$key_fields = $this->import_key_fields[$table];
+				} else {
+					throw new Exception(sprintf(
+						'Missing key fields for UPDATE table %s',
+						$table
+					));
+				}
+			} else {
+				$key_fields = FALSE;
+			}
+
 			$filename = APPPATH.sprintf('migrations/data/%s_%s.csv', $this->id_padded, $table);
-			$this->table($table)->import_csv($filename);
+
+			$this->table($table)
+				->import_csv($filename, $use_update, $key_fields)
+			;
 		}
 	}
 

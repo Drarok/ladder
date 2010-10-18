@@ -442,9 +442,37 @@ class Table {
 		return $result;
 	}
 
-	public function import_csv($path) {
+	/**
+	 * Import a CSV file into the table, assuming the 1st row contains field
+	 * names, and the rest is data. Blank lines are skipped.
+	 * @param $path string Path to the file to import.
+	 * @param $use_update[optional] boolean Should the import use an UPDATE query.
+	 * @param $key_fields[optional] array Which fields to use in the WHERE
+	 * clause to UPDATEs.
+	 */
+	public function import_csv($path, $use_update = FALSE, $key_fields = FALSE) {
 		foreach ($this->get_csv_data($path) as $row) {
-			$this->insert($row);
+			if (! $use_update) {
+				$this->insert($row);
+			} else {
+				// Get the key fields as array keys.
+				$where = array_fill_keys($key_fields, FALSE);
+
+				// Loop through the key fields and set their values.
+				foreach ($where as $key => &$value) {
+					// Grab the value.
+					$value = $row[$key];
+
+					// We don't want to update the field we match on!
+					unset($row[$key]);
+				}
+
+				// Run the update!
+				$this->update(
+					$row,
+					$where
+				);
+			}
 		}
 
 		return $this;
