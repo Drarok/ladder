@@ -1,7 +1,9 @@
 <?php
 
 $config = array(
-	'config' => 'default',
+	'config' => array_key_exists('LADDER_CONFIG', $_SERVER)
+		? $_SERVER['LADDER_CONFIG']
+		: 'default',
 	'with-data' => TRUE,
 	'run-tests' => FALSE,
 	'show-sql' => FALSE,
