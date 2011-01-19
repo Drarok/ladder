@@ -456,7 +456,7 @@ class Table {
 				$this->insert($row);
 			} else {
 				// Get the key fields as array keys.
-				$where = array_fill_keys($key_fields, FALSE);
+				$where = array_fill_keys((array) $key_fields, FALSE);
 
 				// Loop through the key fields and set their values.
 				foreach ($where as $key => &$value) {
