@@ -351,11 +351,24 @@ abstract class Migration {
 		foreach ((array) $this->import_data as $table) {
 			// We should update if import_update is TRUE,
 			// or contains the table name in an array.
-			$use_update = ($this->import_update === TRUE) OR
+			$use_update = (
+				($this->import_update === TRUE) OR
 				(
 					is_array($this->import_update) AND
 					in_array($table, $this->import_update)
-				);
+				)
+			);
+
+			/**
+			 * The above code didn't have enough parentheses, so wasn't working correctly.
+			 * I used the caveman debugging output below to diagnose it.
+			 * var_dump($this->import_update);
+			 * var_dump($table);
+			 * echo 'import_update == ', ($this->import_update === TRUE) ? 'TRUE' : 'FALSE', PHP_EOL;
+			 * echo 'is_array === ', is_array($this->import_update) ? 'TRUE' : 'FALSE', PHP_EOL;
+			 * echo 'in_array === ', in_array($table, $this->import_update) ? 'TRUE' : 'FALSE', PHP_EOL;
+			 * echo 'Update === ', $use_update ? 'TRUE' : 'FALSE', PHP_EOL;
+			 */
 
 			// Inform the user what we're up to.
 			echo "\t\t",

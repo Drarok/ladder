@@ -1,5 +1,8 @@
 * Must-Haves
 	* Any documentation at all, other than the code comments!
+	* Fix the $options parameter in Table::__construct() - it should *merge* with
+	  the defaults, not replace it wholesale. (This allows table type to be passed
+	  in without requiring the charset, too).
 
 * Niceties
 	* It would be nice to tidy up the migrate command, as it's a wrapper around the Ladder class at present.
