@@ -33,7 +33,7 @@ class Config {
 				// Check the requested config exists.
 				if (! array_key_exists(self::$config_name, $config)) {
 					throw new Exception(sprintf(
-						'Invalid config name \'%s\' in file \'%s\'.'.
+						'Invalid config name \'%s\' in file \'%s\'.',
 						self::$config_name, $filename
 					));
 				}
