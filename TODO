@@ -6,3 +6,5 @@
 
 * Niceties
 	* It would be nice to tidy up the migrate command, as it's a wrapper around the Ladder class at present.
+	* Automatic backup prior to an update migration.
+	* Automatic un-update, using the backup from the previous note.
