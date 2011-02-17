@@ -128,7 +128,9 @@ class Grant_Manager {
 		list($username, $host) = $this->valid_username($username);
 
 		// Make sure the object is escaped.
-		$object = sql::escape($object, '`');
+		if ($object != '*.*') {
+			$object = sql::escape($object, '`');
+		}
 
 		// Prefix with current database if no dot in object.
 		if (strpos($object, '.') === FALSE) {
@@ -139,6 +141,22 @@ class Grant_Manager {
 		$this->db->query(sprintf(
 			'REVOKE %s ON %s FROM %s@%s',
 			implode(', ', (array) $privileges), $object,
+			sql::escape($username), sql::escape($host)
+		));
+
+		return $this;
+	}
+
+	/**
+	 * Revoke all privileges from a user.
+	 * @chainable
+	 * @param $username[optional] string
+	 */
+	public function revoke_all($username = NULL) {
+		list($username, $host) = $this->valid_username($username);
+
+		$this->db->query(sprintf(
+			'REVOKE ALL PRIVILEGES, GRANT OPTION FROM %s@%s',
 			sql::escape($username), sql::escape($host)
 		));
 
