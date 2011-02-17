@@ -208,8 +208,8 @@ abstract class Migration {
 		$this->database_name = $database->name;
 
 		// Detect if we should run or not, if they've set the $databases property.
-		if (is_array($this->databases)) {
-			$this->should_run = in_array($database->name, $this->databases);
+		if ((bool) $this->databases) {
+			$this->should_run = in_array($database->name, (array) $this->databases);
 		}
 
 		// Get a reference to the grant manager singleton.

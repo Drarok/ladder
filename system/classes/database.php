@@ -24,46 +24,6 @@ class Database {
 	}
 
 	public function __get($key) {
-		if ($key === 'database') {
-			echo 'Warning: Database->database is deprecated. Use Database->name', "\n";
-
-			// Grab the current call stack.
-			$stack = debug_backtrace(TRUE);
-
-			// Output info.
-			echo "\t", 'Debug Backtrace:', "\n";
-			foreach ($stack as $info) {
-				$file_path = $info['file'];
-				if (substr($file_path, 0, strlen(APPPATH)) == APPPATH) {
-					$file_path = substr($file_path, strlen(APPPATH));
-					$file_path = 'APPPATH'.DS.$file_path;
-				} elseif (substr($file_path, 0, strlen(SYSPATH)) == SYSPATH) {
-					$file_path = substr($file_path, strlen(SYSPATH));
-					$file_path = 'SYSPATH'.DS.$file_path;
-				}
-
-				// Is it a class method that was called?
-				if (array_key_exists('type', $info)) {
-					if ($info['type'] == '::') {
-						$prefix = $info['class'].'::';
-					} else {
-						$prefix = get_class($info['object']).'->';
-					}
-				} else {
-					$prefix = '';
-				}
-
-				$function = $prefix.$info['function'];
-
-				echo "\t", sprintf('File: %s, line: %d, function: %s', $file_path, $info['line'], $function), "\n";
-			}
-
-			echo "\n";
-
-			// Finally return.
-			return $this->databases[$this->database_id];
-		}
-
 		if ($key === 'name') {
 			return $this->databases[$this->database_id];
 		}

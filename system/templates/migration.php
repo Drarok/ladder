@@ -1,7 +1,7 @@
 <?php
 
 class MIGRATION_NAME extends Migration {
-	// protected $min_version = 'LADDER_VERSION';
+	protected $min_version = 'LADDER_VERSION';
 	// protected $databases = FALSE;
 	// protected $import_data = array();
 	// protected $import_update = FALSE; // TRUE for all, or array of tables from import_data to update.

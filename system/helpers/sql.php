@@ -359,9 +359,15 @@ class sql {
 	}
 	
 	public static function update($name, $data, $where) {
+		if (is_array($where)) {
+			$where = self::set_data($where, ' AND ', TRUE);
+		} elseif (is_bool($where)) {
+			$where = $where ? '1' : '0';
+		}
+
 		self::$db->query(sprintf(
 			'UPDATE `%s` SET %s WHERE %s', $name,
-			self::set_data($data), self::set_data($where, ' AND ', TRUE)
+			self::set_data($data), $where
 		));
 	}
 	
