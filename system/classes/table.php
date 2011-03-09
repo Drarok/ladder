@@ -417,7 +417,7 @@ class Table {
 		// Loop over the file and add array elements.
 		while (! feof($csv)) {
 			// Skip errors, and blink lines. Returned as a single null element array.
-			if (! (bool) $row = fgetcsv($csv, 0, ',', '"', '\\') OR $row == array(NULL)) {
+			if (! (bool) $row = fgetcsv($csv) OR $row == array(NULL)) {
 				continue;
 			}
 
@@ -436,6 +436,7 @@ class Table {
 			// Combine the data into an associative array and add to result.
 			$result[] = array_combine($headers, $row);
 		}
+		var_dump($result);
 
 		// Close the file and return the data.
 		fclose($csv);
