@@ -446,6 +446,10 @@ class Table {
 	/**
 	 * Import a CSV file into the table, assuming the 1st row contains field
 	 * names, and the rest is data. Blank lines are skipped.
+	 * If you need multiple lines, or embedded quotes, you *must* enclose the
+	 * value in double quotes ("), and double-up the quotes inside, like
+	 * Microsoft Excel. The PHP documentation contradicts this, but testing
+	 * shows that to be incorrect. e.g. "<a href=""page.html"">page</a>"
 	 * @param $path string Path to the file to import.
 	 * @param $use_update[optional] boolean Should the import use an UPDATE query.
 	 * @param $key_fields[optional] array Which fields to use in the WHERE
