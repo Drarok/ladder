@@ -260,6 +260,33 @@ class sql {
 		return $value;
 	}
 
+	/**
+	 * Escape a database/table identifier.
+	 */
+	public static function escape_identifier($id) {
+		// *.* is a perfectly valid identifier.
+		if ($id === '*.*') {
+			return $id;
+		}
+
+		// Break apart each piece into an array.
+		$parts = explode('.', $id);
+
+		// Escape each part.
+		foreach ($parts as &$part) {
+			// An asterisk may be *part* of an identifier.
+			if ($part == '*') {
+				continue;
+			}
+
+			// Escape, and wrap with backticks.
+			$part = sql::escape($part, '`');
+		}
+
+		// Re-join the pieces and return.
+		return implode('.', $parts);
+	}
+
 	public static function reset_defaults() {
 		self::$overrides = array();
 	}

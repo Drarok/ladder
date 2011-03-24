@@ -436,7 +436,6 @@ class Table {
 			// Combine the data into an associative array and add to result.
 			$result[] = array_combine($headers, $row);
 		}
-		var_dump($result);
 
 		// Close the file and return the data.
 		fclose($csv);

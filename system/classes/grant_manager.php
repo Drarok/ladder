@@ -99,13 +99,13 @@ class Grant_Manager {
 		// Require 'user@host'.
 		list($username, $host) = $this->valid_username($username);
 
-		// Make sure the object is escaped.
-		$object = sql::escape($object, '`');
-
 		// Prefix with current database if no dot in object.
 		if (strpos($object, '.') === FALSE) {
-			$object = sql::escape($this->db->name, '`').'.'.$object;
+			$object = $this->db->name.'.'.$object;
 		}
+
+		// Make sure the object is escaped.
+		$object = sql::escape_identifier($object);
 
 		// Perform the grant.
 		$this->db->query(sprintf(
@@ -127,15 +127,13 @@ class Grant_Manager {
 	public function revoke($privileges, $object, $username = NULL) {
 		list($username, $host) = $this->valid_username($username);
 
-		// Make sure the object is escaped.
-		if ($object != '*.*') {
-			$object = sql::escape($object, '`');
-		}
-
 		// Prefix with current database if no dot in object.
 		if (strpos($object, '.') === FALSE) {
-			$object = sql::escape($this->db->name, '`').'.'.$object;
+			$object = $this->db->name.'.'.$object;
 		}
+
+		// Make sure the object is escaped.
+		$object = sql::escape_identifier($object);
 
 		// Perform the revoke.
 		$this->db->query(sprintf(
