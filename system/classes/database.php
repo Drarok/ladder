@@ -170,7 +170,7 @@ class Database {
 				.'`migration` int(11) NOT NULL default \'0\', '
 				.'`applied` datetime NOT NULL default \'0000-00-00 00:00:00\', '
 				.'UNIQUE KEY `migration` (`migration`)'
-				.') TYPE=MyISAM', FALSE
+				.') ENGINE=MyISAM', FALSE
 			);
 		}
 	}
