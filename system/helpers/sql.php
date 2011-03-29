@@ -339,8 +339,14 @@ class sql {
 		if (($def = arr::val($options, 'default')) !== FALSE) {
 			if (is_null($def))
 				$sql .= ' DEFAULT NULL';
+			else if ('CURRENT_TIMESTAMP' === $def)
+				$sql .= ' DEFAULT CURRENT_TIMESTAMP';
 			else
 				$sql .= ' DEFAULT '.self::escape($def);
+		}
+		
+		if (($on_update = arr::val($options, 'on update')) !== FALSE) {
+			$sql .= ' ON UPDATE ' . $on_update;
 		}
 
 		if (($after = arr::val($options, 'after')) !== FALSE)
