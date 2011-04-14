@@ -60,7 +60,12 @@ class Database {
 		if (! (bool) $this->conn)
 			throw new Exception('Unable to connect to database at '.$host.' '.mysql_error());
 
-		echo 'Connected to ', $host, "\n";
+		// Grab the version number from the server now we're connected.
+		$version = $this->query('SELECT @@version');
+		$version = mysql_fetch_row($version);
+		$version = $version[0];
+		
+		echo sprintf('Connected to %s (version %s)', $host, $version), PHP_EOL;
 
 		if ($this->database_id > -1) {
 			if (! mysql_select_db($this->name, $this->conn))
