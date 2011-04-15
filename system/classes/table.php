@@ -400,7 +400,7 @@ class Table {
 	 * @param string $path Path to the CSV file.
 	 * @since 0.4.11
 	 */
-	private function get_csv_data($path) {
+	public function get_csv_data($path) {
 		// Fail if the file doesn't exist.
 		if (! file_exists($path)) {
 			throw new Exception('Cannot find file: '.$path);
