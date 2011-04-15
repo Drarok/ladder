@@ -72,7 +72,7 @@ abstract class Migration {
 	 */
 	public static function file_name($id) {
 		// Work out the path.
-		$migration_path = APPPATH.'migrations'.DS;
+		$migration_path = LADDER_APPPATH.'migrations'.DS;
 
 		// Append the filename skeleton.
 		$migration_path .= sprintf('%05d-*', (int) $id);
@@ -103,7 +103,7 @@ abstract class Migration {
 		}
 
 		// Make sure we only look at the filename.
-		$file_name = basename($file_name, EXT);
+		$file_name = basename($file_name, '.php');
 
 		// Split the id and name apart.
 		$parts = explode('-', $file_name, 2);
@@ -127,7 +127,7 @@ abstract class Migration {
 	 */
 	public static function get_migration_paths() {
 		// Work out the path to our migrations.
-		$migrations_path = APPPATH.'migrations'.DS.'*.php';
+		$migrations_path = LADDER_APPPATH.'migrations'.DS.'*.php';
 
 		// Search the filesystem and sort.
 		$migrations = glob($migrations_path);
@@ -390,7 +390,7 @@ abstract class Migration {
 				$key_fields = FALSE;
 			}
 
-			$filename = APPPATH.sprintf('migrations/data/%s_%s.csv', $this->id_padded, $table);
+			$filename = LADDER_APPPATH.sprintf('migrations/data/%s_%s.csv', $this->id_padded, $table);
 
 			$this->table($table)
 				->import_csv($filename, $use_update, $key_fields)
@@ -423,7 +423,7 @@ abstract class Migration {
 
 		foreach ($tables as $table) {
 			echo "\t\t", 'Unimporting data for ', $table, PHP_EOL;
-			$filename = APPPATH.sprintf('migrations/data/%s_%s.csv', $this->id_padded, $table);
+			$filename = LADDER_APPPATH.sprintf('migrations/data/%s_%s.csv', $this->id_padded, $table);
 
 			// Check for specified key fields.
 			if ((bool) $this->unimport_key_fields) {

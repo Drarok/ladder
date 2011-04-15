@@ -6,10 +6,10 @@ if (! (bool) ini_get('short_open_tag')) {
 }
 
 // Set the version number.
-define('LADDER_VERSION', trim(file_get_contents(SYSPATH.'VERSION')));
+define('LADDER_VERSION', trim(file_get_contents(LADDER_SYSPATH.'VERSION')));
 
 // Import all the other classes etc. Use autoload later?
-require_once(SYSPATH.'core/imports'.EXT);
+require_once(LADDER_SYSPATH.'core/imports.php');
 
 // Set the error and exception handlers as early as possible.
 set_error_handler(array('ladder', 'error_handler'));
@@ -72,7 +72,7 @@ if ((bool) $params['database'])
 sql::init();
 
 // Decide what to do based on the command passed.
-if (file_exists($command_file_name = SYSPATH.'core/commands/'.$command.EXT)) {
+if (file_exists($command_file_name = LADDER_SYSPATH.'core/commands/'.$command.'.php')) {
 	require_once($command_file_name);
 } else {
 ?>
@@ -81,7 +81,7 @@ Usage: php ladder.php <command> [options]
 
 <command> must be one of the following:
 <?php
-	$commands = glob(SYSPATH.'core/commands/*.php');
+	$commands = glob(LADDER_SYSPATH.'core/commands/*.php');
 	sort($commands);
 	foreach ($commands as $command_file)
 		echo "\t", basename($command_file, '.php'), "\n";

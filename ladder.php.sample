@@ -13,11 +13,9 @@ $system_path = 'system';
 $start_time = microtime(TRUE);
 
 define('DS', DIRECTORY_SEPARATOR);
-define('APPPATH', realpath($application_path).DS);
-define('SYSPATH', realpath($system_path).DS);
-define('EXT', '.php');
+define('LADDER_APPPATH', realpath($application_path).DS);
+define('LADDER_SYSPATH', realpath($system_path).DS);
 
-require_once(SYSPATH.'core/bootstrap'.EXT);
+require_once(LADDER_SYSPATH.'core/bootstrap.php');
 
-printf('Completed in %.3fs', microtime(TRUE) - $start_time);
-echo "\n";
+echo sprintf('Completed in %.3fs', microtime(TRUE) - $start_time), PHP_EOL;

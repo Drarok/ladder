@@ -57,7 +57,7 @@ final class Ladder {
 			),
 			'migration'
 		);
-		$migration_files = glob(APPPATH.'migrations/*.php');
+		$migration_files = glob(LADDER_APPPATH.'migrations/*.php');
 
 		if ($migrate_to == 99999)
 			$migrate_to = 'latest';
@@ -208,7 +208,7 @@ final class Ladder {
 		$params = func_get_args();
 		
 		// Prepend the application path.
-		array_unshift($params, rtrim(APPPATH, DS));
+		array_unshift($params, rtrim(LADDER_APPPATH, DS));
 		
 		return implode(DS, $params);
 	}

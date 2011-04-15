@@ -18,13 +18,13 @@ class Config {
 		}
 
 		if (! array_key_exists($filename, self::$cache)) {
-			$file_path = APPPATH.'config/'.$filename.EXT;
+			$file_path = LADDER_APPPATH.'config/'.$filename.'.php';
 
 			if (! file_exists($file_path)) {
 				throw new Exception(sprintf('Missing config file: "%s"', $file_path));
 			}
 
-			require_once(APPPATH.'config/'.$filename.EXT);
+			require_once(LADDER_APPPATH.'config/'.$filename.'.php');
 
 			if (in_array($filename, self::$general_files)) {
 				// General files don't have a sub-key for each self::$config_name.

@@ -18,4 +18,4 @@ $imports = array(
 
 foreach ($imports as $folder => $imports)
 	foreach ($imports as $import)
-		require_once(SYSPATH.$folder.'/'.$import.EXT);
+		require_once(LADDER_SYSPATH.$folder.'/'.$import.'.php');

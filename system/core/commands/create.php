@@ -1,12 +1,12 @@
 <?php
 
 // Always check the directory exists.
-if (! is_dir(APPPATH.'migrations')) {
-	mkdir(APPPATH.'migrations');
+if (! is_dir(LADDER_APPPATH.'migrations')) {
+	mkdir(LADDER_APPPATH.'migrations');
 }
 
 // Find all the files we should work with.
-$files = glob(APPPATH.'migrations/*'.EXT);
+$files = glob(LADDER_APPPATH.'migrations/*.php');
 
 // Order by filename, as sometimes they come back in a different order.
 sort($files);
@@ -22,13 +22,13 @@ if ($params['name'] === FALSE)
 $new_id = sprintf('%05d', 1 + (int) $migration_id);
 
 // Build the new filename.
-$file_name = $new_id.'-'.$params['name'].EXT;
+$file_name = $new_id.'-'.$params['name'].'.php';
 
 // Translate filename to classname.
 $migration_name = Migration::class_name($file_name);
 
 // Save the file and let the user know.
-$migration_file_path = APPPATH.'migrations/'.$file_name;
+$migration_file_path = LADDER_APPPATH.'migrations/'.$file_name;
 file_put_contents($migration_file_path, template::migration($migration_name));
 echo 'Created ', $file_name, ".\n";
 
@@ -36,10 +36,3 @@ echo 'Created ', $file_name, ".\n";
 if (TRUE === Config::item('editor.auto-edit') AND (bool) $editor = Config::item('editor.editor')) {
 	shell_exec($editor.' '.$migration_file_path);
 }
-
-/*
-if (TRUE === $params['with-data']) {
-	file_put_contents(APPPATH.'migrations/data/'.$file_name, template::data());
-	echo 'Created ', $file_name, " data template.\n";
-};
- */
