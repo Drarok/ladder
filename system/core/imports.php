@@ -2,7 +2,7 @@
 
 $imports = array(
 	'classes' => array(
-		'database',
+		'ladderdb',
 		'grant_manager',
 		'ladder',
 		'migration',

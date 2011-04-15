@@ -4,7 +4,7 @@
 $migrations = Migration::get_migration_ids();
 
 // Get a Database instance.
-$db = Database::factory();
+$db = LadderDB::factory();
 
 // Loop over each database.
 while ($db->next_database()) {

@@ -43,7 +43,7 @@ abstract class Migration {
 	 */
 	protected $unimport_key_fields = FALSE;
 
-	public static function factory(Database $database, $id) {
+	public static function factory(LadderDB $database, $id) {
 		// Initialise.
 		$instance = FALSE;
 
@@ -195,13 +195,13 @@ abstract class Migration {
 		return end($migrations);
 	}
 
-	public function __construct(Database $database) {
+	public function __construct(LadderDB $database) {
 		// Do we need to check version numbers?
 		if ((bool) $this->min_version) {
 			Ladder::check_version_min($this->min_version);
 		}
 
-		// Always store the database instance.
+		// Always store the LadderDB instance.
 		$this->db = $database;
 
 		// Save the current database name.

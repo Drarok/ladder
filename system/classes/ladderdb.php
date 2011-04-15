@@ -1,6 +1,6 @@
 <?php
 
-class Database {
+class LadderDB {
 	protected $conn;
 	protected $databases;
 	protected $database_id;
@@ -9,7 +9,7 @@ class Database {
 	
 	public static function factory() {
 		if (! (bool) self::$instance) {
-			self::$instance = new Database;
+			self::$instance = new LadderDB;
 		}
 		
 		return self::$instance;

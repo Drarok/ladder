@@ -11,7 +11,7 @@ if (! (bool) $migration_id OR $migration_id == '99999') {
 	exit(1);
 }
 
-$db = Database::factory();
+$db = LadderDB::factory();
 
 while ($db->next_database()) {
 	// We must instantiate a fresh one because of should_run.

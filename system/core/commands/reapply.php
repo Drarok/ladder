@@ -10,7 +10,7 @@ if (! (bool) $migration_id || $migration_id == 99999) {
 require_once(Migration::file_name($migration_id));
 
 // Get a Database instance.
-$db = Database::factory();
+$db = LadderDB::factory();
 
 // Loop over each database.
 while ($db->next_database()) {

@@ -7,7 +7,7 @@ final class Ladder {
 	public static $show_sql = FALSE;
 
 	public function __construct($migrate_to, $simulate = FALSE) {
-		$this->db = Database::factory();
+		$this->db = LadderDB::factory();
 
 		while ($this->db->next_database()) {
 			try {
@@ -132,7 +132,7 @@ final class Ladder {
 
 
 	public static function select($sql, $field = FALSE, $value = FALSE) {
-		$res = Database::factory()->query($sql);
+		$res = LadderDB::factory()->query($sql);
 		
 		if ($res === TRUE)
 			throw new Exception('Invalid query for select: '.$sql);

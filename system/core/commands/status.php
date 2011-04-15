@@ -15,7 +15,7 @@ if ($params['verbose']) {
 }
 echo "\n";
 
-$db = Database::factory();
+$db = LadderDB::factory();
 
 while ($db->next_database(FALSE)) {
 	// Grab the latest migration.

@@ -22,7 +22,7 @@ class sql {
 	protected static $overrides;
 	
 	public static function init() {
-		self::$db = Database::factory();
+		self::$db = LadderDB::factory();
 		self::reset_defaults();
 	}
 

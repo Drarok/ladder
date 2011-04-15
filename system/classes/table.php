@@ -16,7 +16,7 @@ class Table {
 	}
 
 	public static function exists($name) {
-		$db = Database::factory();
+		$db = LadderDB::factory();
 		$res = $db->query(sprintf(
 			'SHOW TABLES LIKE \'%s\'', $db->escape_value($name)
 		));
@@ -57,7 +57,7 @@ class Table {
 			return $this->table_columns;
 		}
 
-		$db = Database::factory();
+		$db = LadderDB::factory();
 		$cols = array();
 		$field_query = $db->query(sprintf('SHOW FULL COLUMNS FROM `%s`', $this->name));
 		while ($field_row = mysql_fetch_object($field_query)) {
@@ -341,7 +341,7 @@ class Table {
 		}
 
 		// Run the query.
-		$query = Database::factory()->query(sprintf(
+		$query = LadderDB::factory()->query(sprintf(
 			'SELECT %s FROM `%s` %s',
 			$fields, $this->name, $where
 		));
@@ -522,8 +522,8 @@ class Table {
 		// Make sure any outstanding changes are performed first.
 		$this->execute();
 
-		// Get a database instance.
-		$db = Database::factory();
+		// Get a LadderDB instance.
+		$db = LadderDB::factory();
 
 		// Get a grant manager instance.
 		$grant = Grant_Manager::instance();
