@@ -88,6 +88,7 @@ class Config {
 		$_SERVER['argc'] = count($_SERVER['argv']);
 				
 		try {
+			ob_start();
 			require_once($index_path);
 			echo sprintf('Loaded Kohana in %.3fs', microtime(TRUE) - $start_time), PHP_EOL;
 			
