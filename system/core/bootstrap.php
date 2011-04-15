@@ -61,8 +61,13 @@ if (! (bool) $command = array_shift($args) AND $params['version']) {
 // Set the default config key to use.
 Config::set_config($params['config']);
 
+// Allow Kohana imports to function early on.
+if ((bool) Config::item('config.kohana-index')) {
+	Config::kohana();
+}
+
 // Load the selected config details.
-Config::item('database.database');
+Config::item('database');
 
 // Allow command-line override of the database.
 if ((bool) $params['database'])
@@ -76,7 +81,7 @@ if (file_exists($command_file_name = LADDER_SYSPATH.'core/commands/'.$command.'.
 	require_once($command_file_name);
 } else {
 ?>
-Invalid command: '<?=$command?>'
+Invalid command: '<?php echo $command; ?>'
 Usage: php ladder.php <command> [options]
 
 <command> must be one of the following:

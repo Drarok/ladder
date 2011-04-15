@@ -8,4 +8,8 @@ $config = array(
 	'run-tests' => FALSE,
 	'show-sql' => FALSE,
 	'verbose' => FALSE,
+	
+	// Set a path to your Kohana index.php if you want to use Kohana integration.
+	//'kohana-index' => '../htdocs/index.php',
+	'kohana-index' => FALSE,
 );

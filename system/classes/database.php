@@ -49,8 +49,10 @@ class Database {
 		}
 
 		// Attempt to connect.
+		$host = Config::item('database.hostname').$port;
+		echo 'Connecting to ', $host, '...', PHP_EOL;
 		$this->conn = mysql_connect(
-			$host = Config::item('database.hostname').$port,
+			$host,
 			Config::item('database.username'),
 			Config::item('database.password'),
 			FALSE,
