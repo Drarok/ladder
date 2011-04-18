@@ -90,6 +90,7 @@ class Config {
 		try {
 			ob_start();
 			require_once($index_path);
+			ob_end_flush();
 			echo sprintf('Loaded Kohana in %.3fs', microtime(TRUE) - $start_time), PHP_EOL;
 			
 			$key_prefix = 'database.'.self::$config_name.'.connection.';
