@@ -63,7 +63,14 @@ Config::set_config($params['config']);
 
 // Allow Kohana imports to function early on.
 if ((bool) Config::item('config.kohana-index')) {
+	// Import the Kohana code.
 	Config::kohana();
+	
+	// Force the database configuration to be loaded.
+	Kohana::config_load('database');
+	
+	// Overwrite the 'default' group with the one we want to use. 
+	Kohana::config_set('database.default', Kohana::config('database.'.$params['config']));
 }
 
 // Load the selected config details.
