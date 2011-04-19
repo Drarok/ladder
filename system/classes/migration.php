@@ -224,6 +224,7 @@ abstract class Migration {
 	 */
 	public function __destruct() {
 		$this->execute();
+		$this->finalise();
 	}
 
 	/**
@@ -231,7 +232,14 @@ abstract class Migration {
 	 * may override it to do any setup they need before the migration
 	 * is run (e.g. it is called before up() or down()).
 	 */
-	public function init() {
+	protected function init() {
+	}
+	
+	/**
+	 * Default implementation of finalise does nothing, but subclasses
+	 * may override if to do any cleanup after the migrations has run.
+	 */
+	protected function finalise() {
 	}
 
 	public function execute() {

@@ -50,7 +50,7 @@ class LadderDB {
 
 		// Attempt to connect.
 		$host = Config::item('database.hostname').$port;
-		echo 'Connecting to ', $host, '...', PHP_EOL;
+		echo 'Connecting to ', $host, '... ';
 		$this->conn = mysql_connect(
 			$host,
 			Config::item('database.username'),
@@ -67,7 +67,7 @@ class LadderDB {
 		$version = mysql_fetch_row($version);
 		$version = $version[0];
 		
-		echo sprintf('Connected to %s (version %s)', $host, $version), PHP_EOL;
+		echo sprintf('Connected. Server version %s.', $version), PHP_EOL;
 
 		if ($this->database_id > -1) {
 			if (! mysql_select_db($this->name, $this->conn))
