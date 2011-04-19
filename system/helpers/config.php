@@ -73,13 +73,10 @@ class Config {
 	}
 	
 	public static function kohana() {
-		// Bring in the Kohana stuff...
-		$start_time = microtime(TRUE);
-		
-		// Store a copy of the argv values.
+		// Store a copy of the current argv values.
 		$real_argv = $_SERVER['argv'];
 		
-		// Set up the argv as Kohana expects it.
+		// Set up argv as Kohana expects it.
 		$index_path = self::item('config.kohana-index');
 		$_SERVER['argv'] = array(
 			realpath($index_path),
@@ -88,11 +85,17 @@ class Config {
 		$_SERVER['argc'] = count($_SERVER['argv']);
 				
 		try {
+			// Start buffering the output, and import Kohana.
 			ob_start();
 			require_once($index_path);
-			ob_end_flush();
-			echo sprintf('Loaded Kohana in %.3fs', microtime(TRUE) - $start_time), PHP_EOL;
 			
+			// Create a session during the buffer, else we'll have trouble later.
+			Session::instance();
+			
+			// Flush and close the buffer.
+			ob_end_flush();
+			
+			// Take the config from Kohana, and override the Ladder one.
 			$key_prefix = 'database.'.self::$config_name.'.connection.';
 			self::set_item('database.hostname', Kohana::config($key_prefix.'host'));
 			self::set_item('database.port', Kohana::config($key_prefix.'port'));

@@ -165,10 +165,14 @@ final class Ladder {
 	public static function error_handler($errno, $errstr, $errfile = NULL, $errline = NULL) {
 		echo 'PHP Error: ', "\t", $errno, PHP_EOL;
 		echo "\t\t", $errstr, PHP_EOL;
+		
+		debug_print_backtrace();
 
+		/*
 		if ((bool) $errfile) {
 			echo "File:\t", $errfile, (bool) $errline ? ' ['.$errline.']' : FALSE, PHP_EOL;
 		}
+		*/
 	}
 
 	public static function exception_handler($exception) {
