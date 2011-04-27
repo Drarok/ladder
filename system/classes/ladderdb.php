@@ -160,25 +160,43 @@ class LadderDB {
 
 		return $table_name;
 	}
+	
+	/**
+	 * Get the name of the kvdata table.
+	 * @since 0.6.0
+	 */
+	public function get_kvdata_table() {
+		static $table_name;
+		
+		if (! (bool) $table_name) {
+			$table_name = Config::item('database.kvdata_table', 'migrations_kvdata');
+		}
+			
+		return $table_name;
+	}
 
 	/**
-	 * Check that the migrations table exists. If not, create it.
+	 * Check that the migrations tables exist. If not, create them.
 	 */
 	public function check_migrations_table() {
 		// Check the migrations table exists
-		$table_query = $this->query(
-			'SHOW TABLES LIKE \''.$this->get_migrations_table().'\'',
-			FALSE
-		);
+		if (! (bool) Table::exists($this->get_migrations_table())) {
+			Table::factory($this->get_migrations_table())
+				->column('migration', 'integer', array('null' => FALSE))
+				->column('applied', 'datetime', array('null' => FALSE))
+				->index('primary', 'migration')
+				->execute()
+			;
+		}
 		
-		if (! (bool) mysql_num_rows($table_query)) {
-			$this->query(
-				'CREATE TABLE `'.$this->get_migrations_table().'` ('
-				.'`migration` int(11) NOT NULL default \'0\', '
-				.'`applied` datetime NOT NULL default \'0000-00-00 00:00:00\', '
-				.'UNIQUE KEY `migration` (`migration`)'
-				.') ENGINE=MyISAM', FALSE
-			);
+		// Ensure that the new `kvdata` table exists.
+		if (! Table::exists($this->get_kvdata_table())) {
+			Table::factory($this->get_kvdata_table())
+				->column('migration', 'integer', array('null' => FALSE))
+				->column('kvdata', 'text', array('null' => FALSE))
+				->index('primary', 'migration')
+				->execute()
+			;
 		}
 	}
 
@@ -220,6 +238,10 @@ class LadderDB {
 		return mysql_num_rows($query) == 1;
 	}
 
+	/**
+	 * Remove a migration from the database.
+	 * @param integer $migration The migration id to remove.
+	 */
 	public function remove_migration($id) {
 		$query = $this->query(sprintf(
 			'DELETE FROM `%s` WHERE `migration` = %d',

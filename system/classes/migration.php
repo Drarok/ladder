@@ -278,6 +278,14 @@ abstract class Migration {
 						echo "\t", 'Warning: ', $e->getMessage(), ' when trying to unimport.', PHP_EOL;
 					}
 				}
+				
+				if ($method == 'up') {
+					// Make sure the key-value data is stored after an upgrade.
+					KVDataCache::instance()->save();
+				} elseif ($method == 'down') {
+					// Remove the key-value data after a downgrade.
+					KVDataCache::instance()->remove($this->id);
+				}
 
 				return $result;
 			}
@@ -461,5 +469,40 @@ abstract class Migration {
 		
 		// Use the ladder class to get the file data.
 		return Ladder::file('migrations', 'data', $this->id_padded.'_'.$name);
+	}
+	
+	/**
+	 * Allow migrations to store key-value pairs in the database.
+	 * @param string $key Key to store the data against.
+	 * @param mixed $value Data to store against the key.
+	 * @since 0.6.0
+	 */
+	protected function set($key, $value) {
+		$cache = KVDataCache::instance();
+		$cache->set($this->id, $key, $value);
+	}
+	
+	/**
+	 * Allow migrations to fetch the key-value pairs stored in the database.
+	 * @param $key[optional] string The key to fetch the value for, or nothing to get all data.
+	 * @param $default[optional] mixed Default value to return if not in the database.
+	 * @param $id[optional] integer The id of the migration to get data for, or nothing
+	 * to refer use to the current migration.
+	 * @since 0.6.0
+	 */
+	protected function get($key = NULL, $default = NULL, $id = NULL) {
+		if (! (bool) $id) {
+			$id = $this->id;
+		}
+		
+		return KVDataCache::instance()->get($id, $key, $default);
+	}
+	
+	/**
+	 * Allow migrations to remove all their data (such as for a down() method).
+	 * @param $key[optional] The key to remove, or nothing to remove all data.
+	 */
+	protected function remove($key = NULL) {
+		KVDataCache::instance()->remove($this->id, $key);
 	}
 }

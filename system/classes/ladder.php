@@ -177,14 +177,20 @@ final class Ladder {
 
 	public static function exception_handler($exception) {
 		echo sprintf(
-			'Uncaught exception \'%s\' with message \'%s\' in %s [%s]',
-			get_class($exception), $exception->getMessage(),
-			$exception->getFile(), $exception->getLine()
+			'Uncaught exception \'%s\' with message:', get_class($exception)
 		), PHP_EOL;
+		
+		echo sprintf(
+			"\t".'\'%s\' in %s [%s]',
+			$exception->getMessage(), $exception->getFile(),
+			$exception->getLine()
+		), PHP_EOL;
+		
+		echo 'Stack Trace:', PHP_EOL;
 		
 		// Get the stack trace information.
 		$trace = $exception->getTrace();
-		$traceline = '#%s %s(%s): %s(%s)';
+		$traceline = "\t".'#%s %s(%s): %s(%s)';
 		foreach ($trace as $key => $stackPoint) {
 			// Convert the arguments to their type.
 			$stackPoint['args'] = array_map('gettype', $stackPoint['args']);

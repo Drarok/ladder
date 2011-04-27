@@ -7,6 +7,7 @@ $imports = array(
 		'ladder',
 		'migration',
 		'table',
+		'kvdatacache',
 	),
 	'helpers' => array(
 		'config',
