@@ -77,15 +77,21 @@ if ((bool) Config::item('config.kohana-index')) {
 Config::item('database');
 
 // Allow command-line override of the database.
-if ((bool) $params['database'])
+if ((bool) $params['database']) {
 	Config::set_item('database.database', $params['database']);
+}
 
 // Initialise the SQL helper.
 sql::init();
 
+// Load any hooks.
+hooks::init();
+
 // Decide what to do based on the command passed.
 if (file_exists($command_file_name = LADDER_SYSPATH.'core/commands/'.$command.'.php')) {
+	hooks::run_hooks(hooks::COMMAND_START);
 	require_once($command_file_name);
+	hooks::run_hooks(hooks::COMMAND_END);
 } else {
 ?>
 Invalid command: '<?php echo $command; ?>'
@@ -111,3 +117,5 @@ Usage: php ladder.php <command> [options]
 	--force                   - force operations to run (applies to 'add', 'remove', and 'reapply').
 <?php
 };
+
+hooks::run_hooks(hooks::SYSTEM_END);
