@@ -282,9 +282,15 @@ abstract class Migration {
 				if ($method == 'up') {
 					// Make sure the key-value data is stored after an upgrade.
 					KVDataCache::instance()->save();
+					
+					// Let the hooks system know we're done.
+					hooks::run_hooks(hooks::MIGRATION_UP);
 				} elseif ($method == 'down') {
 					// Remove the key-value data after a downgrade.
 					KVDataCache::instance()->remove($this->id);
+					
+					// Let the hooks system know we're done.
+					hooks::run_hooks(hooks::MIGRATION_DOWN);
 				}
 
 				return $result;
