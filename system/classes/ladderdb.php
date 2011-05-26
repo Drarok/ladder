@@ -9,17 +9,17 @@ class LadderDB {
 	
 	public static function factory() {
 		if (! (bool) self::$instance) {
-			self::$instance = new LadderDB;
+			new LadderDB;
 		}
 		
 		return self::$instance;
 	}
 
 	public function __construct() {
-		if (is_string($this->databases = Config::item('database.database'))) {
-			$this->databases = array($this->databases);
+		if (! self::$instance) {
+			self::$instance = $this;
 		}
-
+		
 		$this->database_id = -1;
 	}
 
@@ -73,11 +73,14 @@ class LadderDB {
 			if (! mysql_select_db($this->name, $this->conn))
 				throw new Exception('Invalid database: '.$this->name);
 		}
+		
+		hooks::run_hooks(hooks::DATABASE_CONNECT);
 	}
 
 	protected function disconnect() {
 		mysql_close($this->conn);
 		$this->conn = FALSE;
+		hooks::run_hooks(hooks::DATABASE_DISCONNECT);
 	}
 
 	public function reconnect() {
@@ -132,6 +135,10 @@ class LadderDB {
 
 	public function next_database($output = TRUE) {
 		$this->connect();
+		
+		if (! (bool) $this->databases) {
+			$this->databases = (array) Config::item('database.database');
+		}
 
 		++$this->database_id;
 

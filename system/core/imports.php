@@ -10,6 +10,7 @@ $imports = array(
 		'kvdatacache',
 	),
 	'helpers' => array(
+		'hooks',
 		'config',
 		'arr',
 		'sql',
