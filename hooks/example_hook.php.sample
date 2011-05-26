@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * This example hook file shows a safe way to create a hook.
+ * An abstract class can be used to avoid polluting the global scope with
+ * variables, and you can store state in `self::$var` style class variables.
+ *
+ * A hook class needn't match the file name.
+ */
+
+abstract class Example_Hook {
+	public static function database_connect() {
+		echo 'Database connection hook', PHP_EOL;
+	}
+	
+	public static function database_changed() {
+		echo 'Database changed hook', PHP_EOL;
+	}
+	
+	public static function system_end() {
+		echo 'System end hook', PHP_EOL;
+	}
+}
+
+hooks::add_hook(hooks::DATABASE_CONNECT, array('Example_Hook', 'database_connect'));
+hooks::add_hook(hooks::DATABASE_CHANGED, array('Example_Hook', 'database_changed'));
+hooks::add_hook(hooks::SYSTEM_END, array('Example_Hook', 'system_end'));

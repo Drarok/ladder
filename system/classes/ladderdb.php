@@ -150,6 +150,7 @@ class LadderDB {
 				echo $this->name, '... ', "\n";
 			}
 			$this->check_migrations_table();
+			hooks::run_hooks(hooks::DATABASE_CHANGED);
 
 			return TRUE;
 		} else {

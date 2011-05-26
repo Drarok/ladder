@@ -118,4 +118,5 @@ Usage: php ladder.php <command> [options]
 <?php
 };
 
+echo sprintf('Completed in %.3fs', microtime(TRUE) - $start_time), PHP_EOL;
 hooks::run_hooks(hooks::SYSTEM_END);

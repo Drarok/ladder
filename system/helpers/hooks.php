@@ -4,6 +4,7 @@ abstract class hooks {
 	const COMMAND_START = 'system.command_start';
 	const COMMAND_END = 'system.command_end';
 	const DATABASE_CONNECT = 'database.connect';
+	const DATABASE_CHANGED = 'database.changed';
 	const DATABASE_DISCONNECT = 'database.disconnect';
 	const MIGRATION_UP = 'migration.up';
 	const MIGRATION_DOWN = 'migration.down';
@@ -13,6 +14,7 @@ abstract class hooks {
 		self::COMMAND_START => array(),
 		self::COMMAND_END => array(),
 		self::DATABASE_CONNECT => array(),
+		self::DATABASE_CHANGED => array(),
 		self::DATABASE_DISCONNECT => array(),
 		self::MIGRATION_UP => array(),
 		self::MIGRATION_DOWN => array(),

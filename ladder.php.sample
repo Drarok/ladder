@@ -17,5 +17,3 @@ define('LADDER_APPPATH', realpath($application_path).DS);
 define('LADDER_SYSPATH', realpath($system_path).DS);
 
 require_once(LADDER_SYSPATH.'core/bootstrap.php');
-
-echo sprintf('Completed in %.3fs', microtime(TRUE) - $start_time), PHP_EOL;
