@@ -1,7 +1,10 @@
 <?php
 
-// Set this to TRUE to output all the SQL for this class.
-define('KVCACHE_DEBUG', FALSE);
+/**
+ * Set this to TRUE to output all the SQL for this class, FALSE to hide it
+ * all, or NULL to hide it by default, but allow --show-sql to work.
+ */
+define('KVCACHE_DEBUG', NULL);
 
 /**
  * This class implements both a local cache – and access to – the Key-Value data
