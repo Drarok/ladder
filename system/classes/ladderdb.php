@@ -201,7 +201,7 @@ class LadderDB {
 		if (! Table::exists($this->get_kvdata_table())) {
 			Table::factory($this->get_kvdata_table())
 				->column('migration', 'integer', array('null' => FALSE))
-				->column('kvdata', 'text', array('null' => FALSE))
+				->column('kvdata', 'longtext', array('null' => FALSE))
 				->index('primary', 'migration')
 				->execute()
 			;
