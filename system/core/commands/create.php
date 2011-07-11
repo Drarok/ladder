@@ -34,5 +34,5 @@ echo 'Created ', $file_name, ".\n";
 
 // Edit it if the options are set.
 if (TRUE === Config::item('editor.auto-edit') AND (bool) $editor = Config::item('editor.editor')) {
-	shell_exec($editor.' '.$migration_file_path);
+	shell_exec(escapeshellcmd($editor).' '.escapeshellarg($migration_file_path));
 }
