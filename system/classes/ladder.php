@@ -163,6 +163,11 @@ final class Ladder {
 	}
 
 	public static function error_handler($errno, $errstr, $errfile = NULL, $errline = NULL) {
+		// Ignore errors that fall below the reporting threshold.
+		if (! ($errno & ini_get('error_reporting'))) {
+			return;
+		}
+
 		echo 'PHP Error: ', "\t", $errno, PHP_EOL;
 		echo "\t\t", $errstr, PHP_EOL;
 		
