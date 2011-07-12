@@ -17,6 +17,7 @@ class sql {
 		'decimal' => array('limit' => '9,3', 'null' => TRUE),
 		'text' => array('null' => TRUE),
 		'enum' => array('null' => TRUE),
+		'timestamp' => array('null' => FALSE, 'default' => 'CURRENT_TIMESTAMP', 'on update' => 'CURRENT_TIMESTAMP'),
 	);
 
 	protected static $overrides;
@@ -337,23 +338,26 @@ class sql {
 			$sql .= ' AUTO_INCREMENT';
 		
 		if (($def = arr::val($options, 'default')) !== FALSE) {
-			if (is_null($def))
+			if (is_null($def)) {
 				$sql .= ' DEFAULT NULL';
-			else if ('CURRENT_TIMESTAMP' === $def)
+			} elseif ($def == 'CURRENT_TIMESTAMP') {
 				$sql .= ' DEFAULT CURRENT_TIMESTAMP';
-			else
+			} else {
 				$sql .= ' DEFAULT '.self::escape($def);
+			}
 		}
 		
-		if (($on_update = arr::val($options, 'on update')) !== FALSE) {
+		if ((bool) $on_update = arr::val($options, 'on update')) {
 			$sql .= ' ON UPDATE ' . $on_update;
 		}
 
-		if (($after = arr::val($options, 'after')) !== FALSE)
+		if (($after = arr::val($options, 'after')) !== FALSE) {
 			$sql .= ' AFTER '.self::escape($after, '`');
+		}
 
-		if (arr::val($options, 'first') !== FALSE)
+		if (arr::val($options, 'first') !== FALSE) {
 			$sql .= ' FIRST';
+		}
 
 		return $sql;
 	}
