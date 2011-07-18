@@ -340,7 +340,7 @@ class sql {
 		if (($def = arr::val($options, 'default')) !== FALSE) {
 			if (is_null($def)) {
 				$sql .= ' DEFAULT NULL';
-			} elseif ($def == 'CURRENT_TIMESTAMP') {
+			} elseif (strtoupper($def) === 'CURRENT_TIMESTAMP') {
 				$sql .= ' DEFAULT CURRENT_TIMESTAMP';
 			} else {
 				$sql .= ' DEFAULT '.self::escape($def);
