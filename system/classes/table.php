@@ -194,7 +194,7 @@ class Table {
 		$cascade = (array) $cascade;
 
 		// Work out a name for the constraint.
-		$name = sprintf('%s_%s_%s_%s', $this->name, $index, $reference_table, implode('_', $reference_fields));
+		$name = sprintf('%s_%s_%s', $this->name, $reference_table, implode('_', $reference_fields));
 
 		// Remember its details for later.
 		$this->constraints['add'][$name] = array(
@@ -216,7 +216,7 @@ class Table {
 		$reference_fields = (array) $reference_fields;
 
 		// Work out a name for the constraint.
-		$name = sprintf('%s_%s_%s', $index, $reference_table, implode('_', $reference_fields));
+		$name = sprintf('%s_%s_%s', $this->name, $reference_table, implode('_', $reference_fields));
 
 		// Remember it for later.
 		$this->constraints['drop'][$name] = $name;
