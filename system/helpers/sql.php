@@ -193,6 +193,7 @@ class sql {
 		}
 
 		// Patch the cascade items to work in SQL.
+		$cascade = (array) $cascade;
 		foreach ($cascade as &$cas) {
 			$cas = 'ON '.strtoupper($cas).' CASCADE';
 		}

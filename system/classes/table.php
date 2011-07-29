@@ -187,14 +187,17 @@ class Table {
 	 * @param string $reference_table The table to refer to.
 	 * @param string|array $reference_fields Fields in $reference_table to constrain to.
 	 * @param string|array $cascade[optional] Which actions to cascade.
+	 * @param string $name[optional] Name the constraint, or omit for automatic naming.
 	 */
-	public function constraint($index, $reference_table, $reference_fields, $cascade = array()) {
+	public function constraint($index, $reference_table, $reference_fields, $cascade = NULL, $name = NULL) {
 		// Fix up any string/array params first.
 		$reference_fields = (array) $reference_fields;
 		$cascade = (array) $cascade;
 
-		// Work out a name for the constraint.
-		$name = sprintf('%s_%s_%s', $this->name, $reference_table, implode('_', $reference_fields));
+		if (! (bool) $name) {
+			// Work out a name for the constraint.
+			$name = sprintf('%s_%s_%s', $this->name, $reference_table, implode('_', $reference_fields));
+		}
 
 		// Remember its details for later.
 		$this->constraints['add'][$name] = array(
@@ -212,6 +215,12 @@ class Table {
 	 * @param string|array $reference_fields The fields it refers to.
 	 */
 	public function drop_constraint($index, $reference_table, $reference_fields) {
+		// Allow a special case where you need to specify the exact name.
+		if (($reference_table === NULL) AND ($reference_fields === NULL)) {
+			$this->constraints['drop'][$index] = $index;
+			return $this;
+		}
+
 		// Fix up any string/array params first.
 		$reference_fields = (array) $reference_fields;
 
