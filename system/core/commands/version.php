@@ -1,1 +1,1 @@
-Ladder <?=LADDER_VERSION, "\n"?>
+Ladder <?php echo LADDER_VERSION, PHP_EOL; ?>
