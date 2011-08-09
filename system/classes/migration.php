@@ -320,6 +320,13 @@ abstract class Migration {
 	}
 
 	/**
+	 * Default implementation of test() does nothing, but migrations may
+	 * override this to provide some tests for use with --run-tests.
+	 */
+	public function test() {
+	}
+
+	/**
 	 * Create an instance of Table representing a new table.
 	 * @return Table 
 	 * @param string $name Name of the new table to create.

@@ -108,11 +108,10 @@ final class Ladder {
 				if (! (bool) $simulate) {
 					$mig->$prefixed_method();
 
-					// Run the test method if there is one and we're meant to.
+					// Run the test method if requested.
 					global $params;
-					if ($method === 'up' AND (bool) $params['run-tests'] AND method_exists($mig, 'test')) {
+					if ($method === 'up' AND (bool) $params['run-tests']) {
 						$mig->execute();
-						echo "\t", $migration_name, '->test()', "\n";
 						$mig->test();
 					}
 				}
