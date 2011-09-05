@@ -82,6 +82,14 @@ while ($db->next_database()) {
 			$prev_data = $info['data'];
 			
 			// Get current info.
+			if (! Table::exists($table_name)) {
+				echo "\t", sprintf(
+					'$this->table(\'%s\')->drop();',
+					$table_name
+				), PHP_EOL;
+				continue;
+			}
+
 			$current_table = Table::factory($table_name, TRUE);
 			$current_columns = $current_table->get_columns();
 			$current_indexes = $current_table->get_indexes();
