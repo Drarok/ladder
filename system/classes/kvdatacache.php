@@ -41,6 +41,9 @@ class KVDataCache {
 	 */
 	protected function __construct() {
 		$this->db = LadderDB::factory();
+		
+		// Make sure we flush the cache when the database is changed.
+		hooks::add_hook(hooks::DATABASE_CHANGED, array($this, 'flush'));
 	}
 	
 	/**
@@ -79,7 +82,7 @@ class KVDataCache {
 		}
 		
 		$result = $this->db->query(sprintf(
-			'SELECT `kvdata` FROM `%s` WHERE (`migration` = %d)',
+			'SELECT `key`, `value` FROM `%s` WHERE (`migration` = %d)',
 			$this->db->get_kvdata_table(), (int) $id
 		), KVCACHE_DEBUG);
 		
@@ -87,8 +90,11 @@ class KVDataCache {
 			// There was no data, so bail out.
 			return FALSE;
 		} else {
-			$row = mysql_fetch_row($result);
-			$this->cache[$id] = unserialize($row[0]);
+			$data = array();
+			while ($row = mysql_fetch_object($result)) {
+				$data[$row->key] = unserialize($row->value);
+			}
+			$this->cache[$id] = $data;
 		}
 	}
 	
@@ -128,7 +134,7 @@ class KVDataCache {
 			unset($this->cache[$id]);
 		} else {
 			// Just remove the passed key.
-			unset($array[$key]);
+			$array[$key] = NULL;
 		}
 		
 		// Remember that this item was changed.
@@ -138,14 +144,25 @@ class KVDataCache {
 	public function save() {
 		foreach ($this->changed as $id) {
 			if (array_key_exists($id, $this->cache)) {
-				$data = $this->db->escape_value(serialize($this->cache[$id]));
-				
-				$this->db->query(sprintf(
-					'INSERT INTO `%1$s` (`migration`, `kvdata`) '
-					.'VALUES (%2$d, \'%3$s\') '
-					.'ON DUPLICATE KEY UPDATE `kvdata` = \'%3$s\'',
-					$this->db->get_kvdata_table(), $id, $data
-				), KVCACHE_DEBUG);
+				foreach ($this->cache[$id] as $key => $value) {
+					if ($value === NULL) {
+						$this->db->query(sprintf(
+							'DELETE FROM `%s` WHERE (`migration` = %d) AND '
+							.'(`key` = \'%s\')',
+							$this->db->get_kvdata_table(), (int) $id,
+							$this->db->escape_value($key)
+						), KVCACHE_DEBUG);
+					} else {
+						$this->db->query(sprintf(
+							'REPLACE INTO `%s` SET '
+							.'`migration` = %d, `key` = \'%s\', '
+							.'`value` = \'%s\'',
+							$this->db->get_kvdata_table(), (int) $id,
+							$this->db->escape_value($key),
+							$this->db->escape_value(serialize($value))
+						), KVCACHE_DEBUG);
+					}
+				}
 			} else {
 				$this->db->query(sprintf(
 					'DELETE FROM `%s` WHERE (`migration` = %d)',
@@ -156,5 +173,15 @@ class KVDataCache {
 		
 		// Clear the changed array to avoid double-saving.
 		$this->changed = array();
+	}
+	
+	/**
+	 * Save all data, and clear the cache.
+	 * @since 0.7.0
+	 * @return NULL
+	 */
+	public function flush() {
+		$this->save();
+		$this->cache = array();
 	}
 }

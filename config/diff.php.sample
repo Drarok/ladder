@@ -1,0 +1,10 @@
+<?php
+
+$config = array(
+	// Add tables here to exclude them from diff checks.
+	'ignore-tables' => array(
+		// 'table_name',
+		// 'table_name',
+		// ...
+	),
+);

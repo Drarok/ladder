@@ -250,7 +250,7 @@ class sql {
 	}
 
 	public static function escape($value, $wrap = '\'') {
-		if (is_string($value)) {
+		if (is_string($value) AND ! is_numeric($value)) {
 			$value = $wrap.self::$db->escape_value($value).$wrap;
 		}
 

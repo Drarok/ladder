@@ -8,6 +8,7 @@ class Table {
 	private $constraints;
 	private $created;
 	private $table_columns;
+	private $table_indexes;
 	private $options;
 	private $insert_id;
 
@@ -64,6 +65,29 @@ class Table {
 			$cols[$field_row->Field] = $field_row;
 		}
 		return $this->table_columns = $cols;
+	}
+	
+	/**
+	 * Get index information from the database.
+	 * @return array
+	 */
+	public function get_indexes($force_refresh = FALSE) {
+		if (! (bool) $force_refresh AND (bool) $this->table_indexes) {
+			return $this->table_indexes;
+		}
+		
+		$db = LadderDB::factory();
+		$index_query = $db->query(sprintf('SHOW INDEXES FROM `%s`', $this->name));
+		
+		$indexes = array();
+		while ($index_row = mysql_fetch_object($index_query)) {
+			if (! array_key_exists($index_row->Key_name, $indexes)) {
+				$indexes[$index_row->Key_name] = array();
+			}
+			$indexes[$index_row->Key_name][] = $index_row;
+		}
+		
+		return $this->table_indexes = $indexes;
 	}
 
 	/**
@@ -355,8 +379,11 @@ class Table {
 			$fields, $this->name, $where
 		));
 
-		// Loop over the result set, saving to an array.
+		// Build the function name to use.
 		$func = 'mysql_fetch_'.$fetch;
+
+		// Loop over the result set, saving to an array.
+		$result = array();
 		while ((bool) $row = $func($query)) {
 			$result[] = $row;
 		}
@@ -365,6 +392,48 @@ class Table {
 		mysql_free_result($query);
 
 		// Return the rows!
+		return $result;
+	}
+	
+	/**
+	 * Return an array containing the columns from the primary key.
+	 * @return array
+	 */
+	public function primary_columns() {
+		$indexes = $this->get_indexes();
+		
+		$result = array();
+		
+		if (array_key_exists('PRIMARY', $indexes)) {
+			foreach ($indexes['PRIMARY'] as $column) {
+				$result[] = $column->Column_name;
+			}
+		}
+		
+		return $result;
+	}
+	
+	/**
+	 * Return an associative array of table data, using the primary key as
+	 * the array keys.
+	 * @return array
+	 */
+	public function select_primary() {
+		$primary_columns = $this->primary_columns();
+		
+		if (count($primary_columns) != 1) {
+			// We can't find a primary key, or it has more than 1 column, so return an empty array.
+			return array();
+		}
+		
+		$primary_column = $primary_columns[0];
+		$data = $this->select();
+		
+		$result = array();
+		foreach ($data as $row) {
+			$result[$row[$primary_column]] = $row;
+		}
+		
 		return $result;
 	}
 	
@@ -544,5 +613,25 @@ class Table {
 
 		return $this;
 	}
-
+	
+	/**
+	 * Return the row count of the table this instance represents.
+	 * @return int
+	 * @since 0.7.0
+	 */
+	public function row_count() {
+		// Make sure there are no pending updates.
+		$this->execute();
+		
+		// Run the SQL.
+		$db = LadderDB::factory();
+		$query = $db->query(sprintf(
+			'SELECT COUNT(*) FROM %s',
+			sql::escape_identifier($this->name)
+		));
+		
+		// Get the value and return.
+		$row = mysql_fetch_row($query);
+		return (int) $row[0];
+	}
 }

@@ -197,14 +197,46 @@ class LadderDB {
 			;
 		}
 		
-		// Ensure that the new `kvdata` table exists.
+		// Ensure that the new `kvdata` table exists, and is the right structure.
 		if (! Table::exists($this->get_kvdata_table())) {
 			Table::factory($this->get_kvdata_table())
 				->column('migration', 'integer', array('null' => FALSE))
-				->column('kvdata', 'longtext', array('null' => FALSE))
-				->index('primary', 'migration')
+				->column('key', 'varchar', array('limit' => 128, 'null' => FALSE))
+				->column('value', 'longtext')
+				->index('primary', array('migration', 'key'))
 				->execute()
 			;
+		} else {
+			// Ensure the on-disk structure matches the new format.
+			$kvdata_table = Table::factory($this->get_kvdata_table(), TRUE);
+			
+			if (! array_key_exists('key', $kvdata_table->get_columns())) {
+				$kvdata_temp = Table::factory('migrations_kvdata_temp')
+					->column('migration', 'integer', array('null' => FALSE))
+					->column('key', 'varchar', array('limit' => 128, 'null' => FALSE))
+					->column('value', 'longtext')
+					->index('primary', array('migration', 'key'))
+					->execute()
+				;
+				
+				$kvdata_rows = $kvdata_table->select();
+				
+				foreach ($kvdata_rows as $row) {
+					$row = (object) $row;
+					$data = unserialize($row->kvdata);
+					foreach ($data as $key => $value) {
+						$kvdata_temp->insert(array(
+							'migration' => $row->migration,
+							'key' => $key,
+							'value' => $value,
+						));
+					}
+				}
+				
+				// Archive the old table, and move the new table into place.
+				$kvdata_table->rename($this->get_kvdata_table() . '_old');
+				$kvdata_temp->rename($this->get_kvdata_table());
+			}
 		}
 	}
 
@@ -262,5 +294,30 @@ class LadderDB {
 			'INSERT INTO `%s` (`migration`, `applied`) VALUES (%d, NOW())',
 			$this->get_migrations_table(), (int) $id
 		));
+	}
+	
+	/**
+	 * Return an array containing all the tables in the current database.
+	 * @return array
+	 * @since 0.7.0
+	 */
+	public function get_tables() {
+		$query = $this->query('SHOW TABLES');
+		
+		$system_tables = array(
+			$this->get_migrations_table(),
+			$this->get_kvdata_table(),
+		);
+		
+		$tables = array();
+		while ((bool) $row = mysql_fetch_row($query)) {
+			if (in_array($row[0], $system_tables)) {
+				continue;
+			}
+			
+			$tables[] = $row[0];
+		}
+		
+		return $tables;
 	}
 }
