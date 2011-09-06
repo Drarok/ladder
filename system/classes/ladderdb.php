@@ -228,7 +228,7 @@ class LadderDB {
 						$kvdata_temp->insert(array(
 							'migration' => $row->migration,
 							'key' => $key,
-							'value' => $value,
+							'value' => serialize($value),
 						));
 					}
 				}
