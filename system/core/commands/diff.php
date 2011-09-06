@@ -9,11 +9,11 @@ $kvdata = KVDataCache::instance();
 $ignore_tables = Config::item('diff.ignore-tables', array());
 
 while ($db->next_database()) {
-	if (! (bool) $kvdata->get(0)) {
+	if (! (bool) $kvdata->get(KVDataCache::DIFF_DATA)) {
 		echo 'There is no saved table info to compare with. Please run diff-save first.', PHP_EOL;
 	} else {
 		$old_tables = array();
-		foreach ($kvdata->get(0) as $key => $value) {
+		foreach ($kvdata->get(KVDataCache::DIFF_DATA) as $key => $value) {
 			if (substr($key, 0, 6) == 'table_') {
 				$old_tables[substr($key, 6)] = $value;
 			}

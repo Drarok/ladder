@@ -9,7 +9,7 @@ $db = LadderDB::factory();
 $kvdata = KVDataCache::instance();
 
 while ($db->next_database()) {
-	$table_info = $kvdata->get(0);
+	$table_info = $kvdata->get(KVDataCache::DIFF_DATA);
 	
 	if ((bool) $table_info AND ! (bool) $params['force']) {
 		echo 'There is already saved table info. Use --force to overwrite.', PHP_EOL;
@@ -45,6 +45,6 @@ while ($db->next_database()) {
 		$info['data'] = $table->select_primary();
 		
 		// Store into the cache.
-		$kvdata->set(0, 'table_'.$table_name, $info);
+		$kvdata->set(KVDataCache::DIFF_DATA, 'table_'.$table_name, $info);
 	}
 }
