@@ -101,8 +101,22 @@ while ($db->next_database()) {
 			;
 			
 			// Compare table info.
-			$new_columns = array_diff(array_keys($current_columns), array_keys($prev_columns));
+			$new_columns = array_diff_key(array_keys($current_columns), array_keys($prev_columns));
 			$missing_columns = array_diff(array_keys($prev_columns), array_keys($current_columns));
+
+			$diff_columns = array();
+			foreach (array_intersect(array_keys($current_columns), array_keys($prev_columns)) as $check_column) {
+				$prev_info = $prev_columns[$check_column];
+				$curr_info = $current_columns[$check_column];
+
+				foreach ($prev_info as $info_key => $info_val) {
+					if ($curr_info->$info_key != $info_val) {
+						// We found column differing info, so make a note of the column name.
+						$diff_columns[] = $check_column;
+						break;
+					}
+				}
+			}
 			
 			$new_indexes = array_diff(array_keys($current_indexes), array_keys($prev_indexes));
 			$missing_indexes = array_diff(array_keys($prev_indexes), array_keys($current_indexes));
@@ -115,7 +129,7 @@ while ($db->next_database()) {
 				$missing_rows = array_diff(array_keys($prev_data), array_keys($current_data));
 			}
 			
-			if ((bool) $new_columns OR (bool) $missing_columns OR (bool) $new_indexes OR (bool) $missing_indexes OR (bool) $new_rows OR (bool) $missing_rows) {
+			if ((bool) $new_columns OR (bool) $missing_columns OR (bool) $diff_columns OR (bool) $new_indexes OR (bool) $missing_indexes OR (bool) $new_rows OR (bool) $missing_rows) {
 				echo "\t", '$this->table(\'', $table_name, '\')', PHP_EOL;
 				
 				if ((bool) $missing_columns) {
@@ -129,6 +143,13 @@ while ($db->next_database()) {
 					echo "\t\t", '// New Columns', PHP_EOL;
 					foreach ($new_columns as $column) {
 						echo "\t\t", parse_field_info($current_columns[$column]), PHP_EOL;
+					}
+				}
+
+				if ((bool) $diff_columns) {
+					echo "\t\t", '// Altered Columns', PHP_EOL;
+					foreach ($diff_columns as $column) {
+						echo "\t\t", parse_field_info($current_columns[$column], TRUE), PHP_EOL;
 					}
 				}
 				
@@ -198,7 +219,7 @@ while ($db->next_database()) {
 	}
 }
 
-function parse_field_info($field_info) {
+function parse_field_info($field_info, $alter = FALSE) {
 	list($name, $type, $collation, $null, $key, $default) = array_values((array) $field_info);
 	
 	// Break the limit out of the type, if applicable.
@@ -208,8 +229,17 @@ function parse_field_info($field_info) {
 		if (! (bool) preg_match('/([a-z]+)\(([\d,]+)\)/i', $type, $matches)) {
 			throw new Exception('Cannot parse field type: '.$type);
 		}
+
 		$type = $matches[1];
 		$limit = $matches[2];
+
+		if ($type == 'int') {
+			$type = 'integer';
+		}
+
+		if ($type == 'integer') {
+			$limit = '';
+		}
 
 		if (! array_key_exists($type, sql::get_default())) {
 			throw new Exception('Unknown field type: ' . $type);
@@ -234,5 +264,9 @@ function parse_field_info($field_info) {
 	$options = substr($options, 0, -2).')';
 	
 	// Output the migration code.
-	return sprintf('->column(\'%s\', \'%s\', %s)', $name, strtolower($type), $options);
+	return sprintf(
+		'->%scolumn(\'%s\', \'%s\', %s)',
+		(bool) $alter ? 'alter_' : FALSE,
+		$name, strtolower($type), $options
+	);
 }
