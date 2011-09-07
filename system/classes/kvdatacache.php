@@ -13,8 +13,6 @@ define('KVCACHE_DEBUG', NULL);
  * @since 0.6.0
  */
 class KVDataCache {
-	const DIFF_DATA = 0;
-
 	protected static $instance = NULL;
 	
 	/**
