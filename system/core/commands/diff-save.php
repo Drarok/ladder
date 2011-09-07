@@ -8,6 +8,32 @@
 $db = LadderDB::factory();
 $kvdata = KVDataCache::instance();
 
+function data_diff($table_name) {
+	$diff_data = Config::item('diff.diff-data');
+
+	// If tables are set globally, return that.
+	if (is_bool($diff_data)) {
+		return $diff_data;
+	}
+
+	// Check it's an array?
+	if (is_array($diff_data)) {
+		if (array_key_exists($table_name, $diff_data)) {
+			// If the table is specified, return that.
+			return (bool) $diff_data[$table_name];
+		} elseif (array_key_exists('*', $diff_data)) {
+			// Attempt to fall back to the '*' key.
+			return (bool) $diff_data['*'];
+		} else {
+			// Can't find anything, so assume FALSE.
+			return FALSE;
+		}
+	}
+
+	// If we get here, assume no data diffing.
+	return FALSE;
+}
+
 while ($db->next_database()) {
 	$table_info = $kvdata->get(KVDataCache::DIFF_DATA);
 	
@@ -42,7 +68,9 @@ while ($db->next_database()) {
 		 * Get the actual data (!) - very experimental, and only supported
 		 * on tables with a single-column PRIMARY KEY.
 		 */
-		$info['data'] = $table->select_primary();
+		if (data_diff($table_name)) {
+			$info['data'] = $table->select_primary();
+		}
 		
 		// Store into the cache.
 		$kvdata->set(KVDataCache::DIFF_DATA, 'table_'.$table_name, $info);

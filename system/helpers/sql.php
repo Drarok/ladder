@@ -305,6 +305,24 @@ class sql {
 	}
 
 	/**
+	 * Return current default options for a given field type, or all current
+	 * defaults if no field type passed.
+	 * @param mixed $field_type[optional] Name of the type, or NULL to return all.
+	 * @return array Associative array of info, or associative array of type => info.
+	 */
+	public static function get_default($field_type = NULL) {
+		$defaults = array_merge(self::$defaults, self::$overrides);
+
+		if (! (bool) $field_type) {
+			return $defaults;
+		} elseif (array_key_exists($field_type, $defaults)) {
+			return $defaults[$field_type];
+		} else {
+			throw new Exception('Unknown field type: '.$field_type);
+		}
+	}
+
+	/**
 	 * Add in defaults if they're required.
 	 */
 	private static function parsefieldoptions($type, $options) {

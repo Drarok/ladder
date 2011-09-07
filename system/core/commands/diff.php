@@ -22,7 +22,6 @@ while ($db->next_database()) {
 		$new_tables = array_diff($db->get_tables(), array_keys($old_tables));
 		
 		if ((bool) $new_tables) {
-			echo 'New Tables:', PHP_EOL;
 			foreach ($new_tables as $table_name) {
 				if (in_array($table_name, $ignore_tables)) {
 					continue;
@@ -79,7 +78,10 @@ while ($db->next_database()) {
 			// Get the info out of the array.
 			$prev_columns = $info['columns'];
 			$prev_indexes = $info['indexes'];
-			$prev_data = $info['data'];
+			$prev_data = array_key_exists('data', $info)
+				? $info['data']
+				: NULL
+			;
 			
 			// Get current info.
 			if (! Table::exists($table_name)) {
@@ -93,7 +95,10 @@ while ($db->next_database()) {
 			$current_table = Table::factory($table_name, TRUE);
 			$current_columns = $current_table->get_columns();
 			$current_indexes = $current_table->get_indexes();
-			$current_data = $current_table->select_primary();
+			$current_data = $prev_data === NULL
+				? NULL
+				: $current_table->select_primary()
+			;
 			
 			// Compare table info.
 			$new_columns = array_diff(array_keys($current_columns), array_keys($prev_columns));
@@ -102,8 +107,13 @@ while ($db->next_database()) {
 			$new_indexes = array_diff(array_keys($current_indexes), array_keys($prev_indexes));
 			$missing_indexes = array_diff(array_keys($prev_indexes), array_keys($current_indexes));
 			
-			$new_rows = array_diff(array_keys($current_data), array_keys($prev_data));
-			$missing_rows = array_diff(array_keys($prev_data), array_keys($current_data));
+			if ($prev_data === NULL) {
+				$new_rows = array();
+				$missing_rows = array();
+			} else {
+				$new_rows = array_diff(array_keys($current_data), array_keys($prev_data));
+				$missing_rows = array_diff(array_keys($prev_data), array_keys($current_data));
+			}
 			
 			if ((bool) $new_columns OR (bool) $missing_columns OR (bool) $new_indexes OR (bool) $missing_indexes OR (bool) $new_rows OR (bool) $missing_rows) {
 				echo "\t", '$this->table(\'', $table_name, '\')', PHP_EOL;
@@ -195,18 +205,26 @@ function parse_field_info($field_info) {
 	if (strpos($type, '(') === FALSE) {
 		$limit = NULL;
 	} else {
-		if (! (bool) preg_match('/([a-z]+)\((\d+)\)/i', $type, $matches)) {
+		if (! (bool) preg_match('/([a-z]+)\(([\d,]+)\)/i', $type, $matches)) {
 			throw new Exception('Cannot parse field type: '.$type);
 		}
 		$type = $matches[1];
-		$limit = (int) $matches[2];
+		$limit = $matches[2];
+
+		if (! array_key_exists($type, sql::get_default())) {
+			throw new Exception('Unknown field type: ' . $type);
+		}
 	}
 	
 	// Build up the options string.
 	$options = 'array(';
 	
 	if ((bool) $limit) {
-		$options .= sprintf('\'limit\' => %d, ', $limit);
+		if (strpos($limit, ',') === FALSE) {
+			$options .= sprintf('\'limit\' => %d, ', (int) $limit);
+		} else {
+			$options .= sprintf('\'limit\' => \'%s\', ', $limit);
+		}
 	}
 	
 	$options .= sprintf('\'null\' => %s, ', ($null == 'YES') ? 'TRUE' : 'FALSE');
