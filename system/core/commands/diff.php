@@ -125,12 +125,29 @@ while ($db->next_database()) {
 			if ($prev_data === NULL) {
 				$new_rows = array();
 				$missing_rows = array();
+				$diff_rows = array();
 			} else {
 				$new_rows = array_diff(array_keys($current_data), array_keys($prev_data));
 				$missing_rows = array_diff(array_keys($prev_data), array_keys($current_data));
+
+				$diff_rows = array();
+				foreach (array_intersect(array_keys($current_data), array_keys($prev_data)) as $check_data) {
+					$prev_info = $prev_data[$check_data];
+					$curr_info = $current_data[$check_data];
+
+					foreach ($prev_info as $info_key => $info_val) {
+						$diff_row_columns = array();
+						if ($info_val != $curr_info[$info_key]) {
+							$diff_row_columns[$info_key] = $curr_info[$info_key];
+						}
+						if ((bool) $diff_row_columns) {
+							$diff_rows[$check_data] = $diff_row_columns;
+						}
+					}
+				}
 			}
 			
-			if ((bool) $new_columns OR (bool) $missing_columns OR (bool) $diff_columns OR (bool) $new_indexes OR (bool) $missing_indexes OR (bool) $new_rows OR (bool) $missing_rows) {
+			if ((bool) $new_columns OR (bool) $missing_columns OR (bool) $diff_columns OR (bool) $new_indexes OR (bool) $missing_indexes OR (bool) $new_rows OR (bool) $missing_rows OR (bool) $diff_rows) {
 				echo "\t", '$this->table(\'', $table_name, '\')', PHP_EOL;
 				
 				if ((bool) $missing_columns) {
@@ -178,7 +195,7 @@ while ($db->next_database()) {
 					}
 				}
 				
-				if ((bool) $missing_rows OR (bool) $new_rows) {
+				if ((bool) $missing_rows OR (bool) $new_rows OR (bool) $diff_rows) {
 					$primary_columns = $current_table->primary_columns();
 					
 					if (count($primary_columns) == 1) {
@@ -188,8 +205,8 @@ while ($db->next_database()) {
 							echo "\t\t", '// Removed Rows', PHP_EOL;
 							foreach ($missing_rows as $key_value) {
 								echo "\t\t", sprintf(
-									'->delete(array(\'%s\' => \'%s\'))',
-									$primary_column, $db->escape_value($key_value)
+									'->delete(array(\'%s\' => %s))',
+									$primary_column, sql::escape($key_value)
 								), PHP_EOL;
 							}
 						}
@@ -201,14 +218,21 @@ while ($db->next_database()) {
 								$data_array = array();
 								foreach ($data as $field => $value) {
 									$data_array[] = sprintf(
-										'\'%s\' => \'%s\'',
-										$field, $db->escape_value($value)
+										'\'%s\' => %s',
+										$field, sql::escape($value)
 									);
 								}
 								echo "\t\t", sprintf(
 									'->insert(array(%s))',
 									implode(', ', $data_array)
 								), PHP_EOL;
+							}
+						}
+
+						if ((bool) $diff_rows) {
+							echo "\t\t", '// Altered Rows', PHP_EOL;
+							foreach ($diff_rows as $primary_val => $changed_columns) {
+								require(LADDER_SYSPATH.'templates/altered_rows.php');
 							}
 						}
 					}
