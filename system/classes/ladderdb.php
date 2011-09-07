@@ -211,6 +211,8 @@ class LadderDB {
 			$kvdata_table = Table::factory($this->get_kvdata_table(), TRUE);
 			
 			if (! array_key_exists('key', $kvdata_table->get_columns())) {
+				echo 'WARNING: Upgrading kvdata store...', PHP_EOL;
+
 				$kvdata_temp = Table::factory('migrations_kvdata_temp')
 					->column('migration', 'integer', array('null' => FALSE))
 					->column('key', 'varchar', array('limit' => 128, 'null' => FALSE))
