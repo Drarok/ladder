@@ -6,7 +6,6 @@
  */
 
 $db = LadderDB::factory();
-$kvdata = KVDataCache::instance();
 
 function data_diff($table_name) {
 	$diff_data = Config::item('diff.diff-data');
@@ -35,11 +34,12 @@ function data_diff($table_name) {
 }
 
 while ($db->next_database()) {
-	$table_info = $kvdata->get(KVDataCache::DIFF_DATA);
+	$cache = LocalCache::factory($db->name);
+	$table_info = $cache->get();
 	
 	if ((bool) $table_info AND ! (bool) $params['force']) {
-		echo 'There is already saved table info. Use --force to overwrite.', PHP_EOL;
-		exit(1);
+		echo sprintf('There is already saved table info for database %s. Use --force to overwrite.', $db->name), PHP_EOL;
+		continue;
 	}
 
 	// Don't store any state for these tables.
@@ -73,6 +73,6 @@ while ($db->next_database()) {
 		}
 		
 		// Store into the cache.
-		$kvdata->set(KVDataCache::DIFF_DATA, 'table_'.$table_name, $info);
+		$cache->set('table_'.$table_name, $info);
 	}
 }

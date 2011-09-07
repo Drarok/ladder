@@ -7,9 +7,9 @@
 define('KVCACHE_DEBUG', NULL);
 
 /**
- * This class implements both a local cache – and access to – the Key-Value data
- * store. Each migration has its own unique set of keys, but can access others
- * should it need to.
+ * This class implements both an in-memory cache – and access to – the
+ * Key-Value database store. Each migration has its own unique set of keys,
+ * but can access others should it need to.
  * @since 0.6.0
  */
 class KVDataCache {

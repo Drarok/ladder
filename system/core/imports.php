@@ -8,6 +8,7 @@ $imports = array(
 		'migration',
 		'table',
 		'kvdatacache',
+		'localcache',
 	),
 	'helpers' => array(
 		'hooks',
