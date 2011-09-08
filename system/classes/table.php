@@ -417,6 +417,7 @@ class Table {
 	 * Return an associative array of table data, using the primary key as
 	 * the array keys.
 	 * @return array
+	 * @since 0.7.0
 	 */
 	public function select_primary() {
 		$primary_columns = $this->primary_columns();

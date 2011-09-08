@@ -35,6 +35,10 @@ function data_diff($table_name) {
 
 while ($db->next_database()) {
 	$cache = LocalCache::factory($db->name);
+
+	// Throw away any data that was previously saved.
+	$cache->clear();
+
 	$table_info = $cache->get();
 	
 	if ((bool) $table_info AND ! (bool) $params['force']) {
@@ -46,6 +50,7 @@ while ($db->next_database()) {
 	$system_tables = array(
 		Config::item('database.migrations_table', 'migrations'),
 		Config::item('database.kvdata_table', 'migrations_kvdata'),
+		Config::item('database.kvdata_table', 'migrations_kvdata') . '_old',
 	);
 	
 	foreach ($db->get_tables() as $table_name) {

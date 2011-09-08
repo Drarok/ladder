@@ -59,5 +59,9 @@ class LocalCache {
 			unset($this->cache[$key]);
 		}
 	}
+
+	public function clear() {
+		$this->cache = array();
+	}
 }
 
