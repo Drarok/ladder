@@ -102,7 +102,7 @@ while ($db->next_database()) {
 			;
 			
 			// Compare table info.
-			$new_columns = array_diff_key(array_keys($current_columns), array_keys($prev_columns));
+			$new_columns = array_diff(array_keys($current_columns), array_keys($prev_columns));
 			$missing_columns = array_diff(array_keys($prev_columns), array_keys($current_columns));
 
 			$diff_columns = array();
@@ -147,7 +147,16 @@ while ($db->next_database()) {
 				}
 			}
 			
-			if ((bool) $new_columns OR (bool) $missing_columns OR (bool) $diff_columns OR (bool) $new_indexes OR (bool) $missing_indexes OR (bool) $new_rows OR (bool) $missing_rows OR (bool) $diff_rows) {
+			if (
+				(bool) $new_columns OR
+				(bool) $missing_columns OR
+				(bool) $diff_columns OR
+				(bool) $new_indexes OR
+				(bool) $missing_indexes OR
+				(bool) $new_rows OR
+				(bool) $missing_rows OR
+				(bool) $diff_rows
+			) {
 				echo "\t", '$this->table(\'', $table_name, '\')', PHP_EOL;
 				
 				if ((bool) $missing_columns) {
@@ -158,9 +167,30 @@ while ($db->next_database()) {
 				}
 				
 				if ((bool) $new_columns) {
+					$column_names = array_keys($current_columns);
+
 					echo "\t\t", '// New Columns', PHP_EOL;
 					foreach ($new_columns as $column) {
-						echo "\t\t", parse_field_info($current_columns[$column]), PHP_EOL;
+						// Find the index of this column within the table.
+						$idx = array_search($column, $column_names);
+
+						if ($idx === FALSE) {
+							// We can't find the column - very weird!
+							throw new Exception(sprintf('Failed to locate current column \'%s\'.', $column));
+						}
+
+						if ($idx === 0) {
+							// 0 means it's the first column, so pass FALSE (it's not after anything).
+							$after = FALSE;
+						} elseif ($idx < count($current_columns) - 1) {
+							// Pass the previous column name.
+							$after = $column_names[$idx - 1];
+						} else {
+							// It's the last column in the table, so pass NULL.
+							$after = NULL;
+						}
+
+						echo "\t\t", parse_field_info($current_columns[$column], FALSE, $after), PHP_EOL;
 					}
 				}
 
@@ -244,7 +274,7 @@ while ($db->next_database()) {
 	}
 }
 
-function parse_field_info($field_info, $alter = FALSE) {
+function parse_field_info($field_info, $alter = FALSE, $after = NULL) {
 	list($name, $type, $collation, $null, $key, $default) = array_values((array) $field_info);
 	
 	// Break the limit out of the type, if applicable.
@@ -284,6 +314,12 @@ function parse_field_info($field_info, $alter = FALSE) {
 	
 	$options .= sprintf('\'null\' => %s, ', ($null == 'YES') ? 'TRUE' : 'FALSE');
 	$options .= sprintf('\'default\' => %s, ', sql::escape($default));
+
+	if ((bool) $after) {
+		$options .= sprintf('\'after\' => \'%s\', ', $after);
+	} elseif ($after === FALSE) {
+		$options .= '\'first\' => TRUE, ';
+	}
 	
 	// Trim the trailing comma-space, close the array.
 	$options = substr($options, 0, -2).')';
