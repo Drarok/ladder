@@ -36,15 +36,15 @@ function data_diff($table_name) {
 while ($db->next_database()) {
 	$cache = LocalCache::factory($db->name);
 
-	// Throw away any data that was previously saved.
-	$cache->clear();
-
 	$table_info = $cache->get();
 	
 	if ((bool) $table_info AND ! (bool) $params['force']) {
 		echo sprintf('There is already saved table info for database %s. Use --force to overwrite.', $db->name), PHP_EOL;
 		continue;
 	}
+
+	// Throw away any data that was previously saved.
+	$cache->clear();
 
 	// Don't store any state for these tables.
 	$system_tables = array(
