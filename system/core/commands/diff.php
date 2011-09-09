@@ -275,50 +275,30 @@ while ($db->next_database()) {
 }
 
 function parse_field_info($field_info, $alter = FALSE, $after = NULL) {
-	list($name, $type, $collation, $null, $key, $default) = array_values((array) $field_info);
-	
-	// Break the limit out of the type, if applicable.
-	if (strpos($type, '(') === FALSE) {
-		$limit = NULL;
-	} else {
-		if (! (bool) preg_match('/([a-z]+)\(([\d,]+)\)/i', $type, $matches)) {
-			throw new Exception('Cannot parse field type: '.$type);
-		}
-
-		$type = $matches[1];
-		$limit = $matches[2];
-
-		if ($type == 'int') {
-			$type = 'integer';
-		}
-
-		if ($type == 'integer') {
-			$limit = '';
-		}
-
-		if (! array_key_exists($type, sql::get_default())) {
-			throw new Exception('Unknown field type: ' . $type);
-		}
-	}
+	$parser = FieldParser::factory($field_info);
 	
 	// Build up the options string.
 	$options = 'array(';
 	
-	if ((bool) $limit) {
-		if (strpos($limit, ',') === FALSE) {
-			$options .= sprintf('\'limit\' => %d, ', (int) $limit);
+	if ((bool) $parser->limit) {
+		if (strpos($parser->limit, ',') === FALSE) {
+			$options .= sprintf('\'limit\' => %d, ', (int) $parser->limit);
 		} else {
-			$options .= sprintf('\'limit\' => \'%s\', ', $limit);
+			$options .= sprintf('\'limit\' => \'%s\', ', $parser->limit);
 		}
 	}
 	
-	$options .= sprintf('\'null\' => %s, ', ($null == 'YES') ? 'TRUE' : 'FALSE');
-	$options .= sprintf('\'default\' => %s, ', sql::escape($default));
+	$options .= sprintf('\'null\' => %s, ', $parser->null ? 'TRUE' : 'FALSE');
+	$options .= sprintf('\'default\' => %s, ', sql::escape($parser->default));
 
 	if ((bool) $after) {
 		$options .= sprintf('\'after\' => \'%s\', ', $after);
 	} elseif ($after === FALSE) {
 		$options .= '\'first\' => TRUE, ';
+	}
+
+	if ((bool) $parser->enum_options) {
+		$options .= sprintf('\'options\' => array(%s), ', implode(', ', array_map('sql::escape', $parser->enum_options)));
 	}
 	
 	// Trim the trailing comma-space, close the array.
@@ -328,6 +308,123 @@ function parse_field_info($field_info, $alter = FALSE, $after = NULL) {
 	return sprintf(
 		'->%scolumn(\'%s\', \'%s\', %s)',
 		(bool) $alter ? 'alter_' : FALSE,
-		$name, strtolower($type), $options
+		$parser->name, strtolower($parser->type), $options
 	);
+}
+
+
+class FieldParser {
+	public static function factory($info) {
+		return new FieldParser($info);
+	}
+
+	protected $info;
+	protected $name;
+	protected $type;
+	protected $limit;
+	protected $null;
+	protected $default;
+	protected $enum_options;
+
+	public function __construct($info) {
+		$this->info = (array) $info;
+		$this->parse();
+	}
+
+	public function __destruct() {
+	}
+
+	public function __get($key) {
+		static $safe_list = array('name', 'type', 'limit', 'null', 'default', 'enum_options');
+		if (in_array($key, $safe_list)) {
+			return $this->$key;
+		}
+	}
+
+	protected function parse() {
+		$type = NULL;
+
+		foreach ($this->info as $k => $v) {
+			switch ($k) {
+				case 'Field':
+					$this->name = $v;
+					break;
+
+				case 'Type':
+					$type = $v;
+					break;
+
+				case 'Null':
+					$this->null = ($v == 'YES');
+					break;
+
+				case 'Default':
+					$this->default = $v;
+					break;
+			}
+		}
+
+		// Post-process the type.
+		if ((bool) preg_match('/([a-z]+)\(([\d,]+)\)/i', $type, $matches)) {
+			$this->type = $matches[1];
+			$this->limit = $matches[2];
+			$this->enum_options = array();
+		} elseif ((bool) preg_match('/(enum)\((.*?)\)/i', $type, $matches)) {
+			$this->type = $matches[1];
+			$this->limit = NULL;
+			$this->parse_enum_options($matches[2]);
+		} else {
+			throw new Exception('Cannot parse field type: '.$type);
+		}
+
+		// Map short-hand types to their long equivalent.
+		if ($this->type == 'int') {
+			$this->type = 'integer';
+		}
+
+		// Check the parsed type exists in the SQL helper.
+		if (! array_key_exists($this->type, sql::get_default())) {
+			throw new Exception('Unknown field type: ' . $this->type);
+		}
+	}
+
+	protected function parse_enum_options($options) {
+		// 1 = outside quotes
+		// 2 = inside quotes
+		$state = 1;
+
+		// Current option (built on each iteration).
+		$current = '';
+
+		// Grab the length once, not on every iteration.
+		$len = strlen($options);
+
+		// Reset the ivar.
+		$this->enum_options = array();
+
+		for ($i = 0; $i <= $len; ++$i) {
+			if ($i < $len) {
+				// Grab the character at the specified index.
+				$c = $options[$i];
+			} else {
+				// We've gone past the end, mark with a NULL.
+				$c = NULL;
+			}
+
+			if ($c == '\'') {
+				// Flip the state when we encounter a quote.
+				$state = $state == 1 ? 2 : 1;
+				continue;
+			}
+
+			if ((($c == ',') OR ($c === NULL)) AND ($state == 1)) {
+				// If there's a comma (or we reached the end), and we're outside of quotes, we have a value.
+				$this->enum_options[] = $current;
+				$current = '';
+			} elseif ($state == 2) {
+				// We're inside quotes, so append the character.
+				$current .= $c;
+			}
+		}
+	}
 }
