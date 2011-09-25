@@ -346,32 +346,12 @@ abstract class Migration {
 	 */
 	protected function table($name, $options = NULL) {
 		if (! array_key_exists($name, $this->tables)) {
-			$this->tables[$name] = new Table($name, TRUE, $options);
+			$this->tables[$name] = new Table($name, NULL, $options);
 		}
 
 		return $this->tables[$name];
 	}
-
-	protected function drop_table($name, $if_exists = FALSE) {
-		sql::drop_table($name, $if_exists);
-	}
-
-	protected function add_column($table, $name, $type, $options = array()) {
-		sql::add_column($table, array($name, $type, $options));
-	}
-
-	protected function drop_column($table, $name) {
-		sql::drop_column($table, $name);
-	}
-
-	protected function add_index($table, $name, $columns = FALSE, $options = array()) {
-		sql::add_index($table, array($name, $columns, $options));
-	}
-
-	protected function drop_index($table, $name) {
-		sql::drop_index($table, $name);
-	}
-
+	
 	protected function import_data() {
 		if (! (bool) $this->import_data) {
 			return;
