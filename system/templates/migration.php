@@ -16,7 +16,7 @@ class MIGRATION_NAME extends Migration {
 	}
 
 	public function down() {
-		// $this->drop_table('new_table');
+		// $this->table('new_table')->drop();
 		// $value = $this->get('key');
 	}
 }
