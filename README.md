@@ -22,7 +22,7 @@ column instead of adding it, etc.
 
 ## Cool. How do I use it?
 
-If you're reading this file, you've already got it (or you're reading it on Github…).
+If you're reading this file, you've already got it (or you're reading it on Github/BitBucket…).
 Have a look in the config/ directory. Copy each file ending in ".sample", and
 remove the ".sample" part. Edit your copies of the files, plugging in your own
 settings such as database server.
