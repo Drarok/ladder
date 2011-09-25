@@ -14,12 +14,18 @@ in order to track the changes we make to the database alongside our source code.
 This allows us all to work on a project and know whether or not we have applied
 various changes to our local development environments.
 
+Migrations have at least two methods: `up()` and `down()`. The `up()` method is
+run when the migration hasn't been applied and should have been. `down()` is run
+when the migration is being removed from the database. Logically, a `down()`
+method should do the opposite to its counterpart `up()` method. Dropping a
+column instead of adding it, etc.
+
 ## Cool. How do I use it?
 
-If you're reading this file, you've already got it. Have a look in the config/
-directory. Copy each file ending in ".sample", and remove the ".sample" part.
-Edit your copies of the files, plugging in your own settings such as database
-server.
+If you're reading this file, you've already got it (or you're reading it on Github…).
+Have a look in the config/ directory. Copy each file ending in ".sample", and
+remove the ".sample" part. Edit your copies of the files, plugging in your own
+settings such as database server.
 
 Also, in the root of the project (the directory where this file is), take a copy
 of ladder.php.sample, rename it to ladder.php, change any settings in there
@@ -34,8 +40,7 @@ that!
 I'd advise you to check the documentation, but unfortunately, you're reading it.
 A brief list of supported features follows:
 
-
- 1. Table creation.<br />
+ 1. Table creation / alteration.<br />
 	Tables can be created - or altered if they already exist - seamlessly.
 
  1. Column additions, alterations, removal.<br />
@@ -67,3 +72,6 @@ A brief list of supported features follows:
 If you create a new migration (`php ladder.php create *migration_name*`), the
 template that is created contains a lot of the options you can use, but
 commented out.
+
+Alternatively, take a look at http://drarok.com/ladder/ - I'm adding some
+examples there as requests come in.
