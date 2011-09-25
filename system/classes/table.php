@@ -12,7 +12,7 @@ class Table {
 	private $options;
 	private $insert_id;
 
-	public static function factory($name, $created = FALSE, $options = NULL) {
+	public static function factory($name, $created = NULL, $options = NULL) {
 		return new Table($name, $created, $options);
 	}
 
@@ -24,17 +24,28 @@ class Table {
 		return mysql_num_rows($res) == 1;
 	}
 
-	public function __construct($name, $created = FALSE, $options = NULL) {
+	public function __construct($name, $created = NULL, $options = NULL) {
 		$this->name = $name;
-		$this->created = $created;
+		
+		if ($created === NULL) {
+			// Detect if the table exists.
+			$this->created = Table::exists($name);
+		} else {
+			// Use the passed value.
+			$this->created = (bool) $created;
+		}
+		
+		// Setup the instance.
 		$this->clear();
 
 		if (! (bool) $created) {
+			// Add a default `id` column, make it autoincrement and primary key.
 			$this->column('id', 'integer', array('null' => FALSE, 'autoincrement' => TRUE));
 			$this->index('PRIMARY', 'id');
 		}
 
 		if ($options === NULL) {
+			// If no options passed, then use the defaults.
 			$options = Config::item('table');
 		}
 
