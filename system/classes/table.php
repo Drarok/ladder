@@ -38,7 +38,7 @@ class Table {
 		// Setup the instance.
 		$this->clear();
 
-		if (! (bool) $created) {
+		if (! (bool) $this->created) {
 			// Add a default `id` column, make it autoincrement and primary key.
 			$this->column('id', 'integer', array('null' => FALSE, 'autoincrement' => TRUE));
 			$this->index('PRIMARY', 'id');
