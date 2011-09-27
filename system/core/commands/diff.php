@@ -373,8 +373,6 @@ class FieldParser {
 			$this->type = $matches[1];
 			$this->limit = NULL;
 			$this->parse_enum_options($matches[2]);
-		} else {
-			throw new Exception('Cannot parse field type: '.$type);
 		}
 
 		// Map short-hand types to their long equivalent.
