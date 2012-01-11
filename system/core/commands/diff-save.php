@@ -80,4 +80,7 @@ while ($db->next_database()) {
 		// Store into the cache.
 		$cache->set('table_'.$table_name, $info);
 	}
+	
+	// Make sure we save once we're finished.
+	$cache->save();
 }
