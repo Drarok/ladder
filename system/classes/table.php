@@ -218,13 +218,13 @@ class Table {
 	/**
 	 * Create a constraint on this Table instance.
 	 * @return Table
-	 * @param string $index The index in this table to constrain.
+	 * @param string $column The column in this table to constrain.
 	 * @param string $reference_table The table to refer to.
 	 * @param string|array $reference_fields Fields in $reference_table to constrain to.
 	 * @param string|array $cascade[optional] Which actions to cascade.
 	 * @param string $name[optional] Name the constraint, or omit for automatic naming.
 	 */
-	public function constraint($index, $reference_table, $reference_fields, $cascade = NULL, $name = NULL) {
+	public function constraint($column, $reference_table, $reference_fields, $cascade = NULL, $name = NULL) {
 		// Fix up any string/array params first.
 		$reference_fields = (array) $reference_fields;
 		$cascade = (array) $cascade;
@@ -236,7 +236,7 @@ class Table {
 
 		// Remember its details for later.
 		$this->constraints['add'][$name] = array(
-			$name, $index, $reference_table, $reference_fields, $cascade
+			$name, $column, $reference_table, $reference_fields, $cascade
 		);
 
 		return $this;
