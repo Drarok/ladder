@@ -1,0 +1,19 @@
+{
+    "name": "drarok/ladder1",
+    "type": "library",
+    "description": "Database migration system written in PHP",
+    "keywords": ["migration","php"],
+    "homepage": "http://drarok.com/ladder",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Mat Gadd",
+            "email": "ladder@catchall.drarok.com",
+            "homepage": "http://drarok.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.2.0"
+    }
+}
