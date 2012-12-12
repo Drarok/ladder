@@ -2,9 +2,11 @@
 
 class sql {
 	protected static $db;
-	
+
 	protected static $defaults = array(
+		'varbinary' => array('limit' => 255, 'null' => TRUE),
 		'varchar' => array('limit' => 255, 'null' => TRUE),
+		'binary' => array('limit' => 255, 'null' => TRUE),
 		'char' => array('limit' => 255, 'null' => TRUE),
 		'tinyint' => array('null' => TRUE),
 		'smallint' => array('null' => TRUE),
@@ -21,7 +23,7 @@ class sql {
 	);
 
 	protected static $overrides;
-	
+
 	public static function init() {
 		self::$db = LadderDB::factory();
 		self::reset_defaults();
@@ -296,11 +298,11 @@ class sql {
 	public static function set_default($field_type, $options) {
 		if (! array_key_exists($field_type, self::$defaults))
 			throw new Exception('Unknown field type: '.$field_type);
-		
+
 		if (! is_array($options))
 			throw new Exception('Invalid options. Expected: Array, Actual: '
 				.gettype($options));
-		
+
 		self::$overrides[$field_type] = $options;
 	}
 
@@ -331,10 +333,13 @@ class sql {
 
 		$defaults = array_merge(self::$defaults, self::$overrides);
 
-		if (array_key_exists($type, $defaults))
+		if (! array_key_exists($type, $defaults)) {
+			throw new Exception('Unknown column type: ' . $type);
+		} else {
 			$options = array_merge($defaults[$type], $options);
+		}
 
-		if (preg_match('/varchar|char|float|decimal/', $type))
+		if (preg_match('/(var)?binary|(var)?char|float|decimal/', $type))
 			$sql = sprintf('%s(%s)', $type, $options['limit']);
 		elseif ($type == 'enum') {
 			$enum_options = array();
@@ -355,7 +360,7 @@ class sql {
 
 		if (arr::val($options, 'autoincrement') === TRUE)
 			$sql .= ' AUTO_INCREMENT';
-		
+
 		if (($def = arr::val($options, 'default')) !== FALSE) {
 			if (is_null($def)) {
 				$sql .= ' DEFAULT NULL';
@@ -365,7 +370,7 @@ class sql {
 				$sql .= ' DEFAULT '.self::escape($def);
 			}
 		}
-		
+
 		if ((bool) $on_update = arr::val($options, 'on update')) {
 			$sql .= ' ON UPDATE ' . $on_update;
 		}
@@ -400,10 +405,10 @@ class sql {
 				$values[] = sprintf('%s = %s', self::escape($field, '`'), self::escape($value));
 			}
 		}
-		
+
 		return implode($join, $values);
 	}
-	
+
 	public static function insert($name, $data, $extra = '') {
 		if ((bool) $extra)
 			$extra .= ' ';
@@ -413,7 +418,7 @@ class sql {
 	public static function insert_id() {
 		return self::$db->insert_id();
 	}
-	
+
 	public static function update($name, $data, $where) {
 		if (is_array($where)) {
 			$where = self::set_data($where, ' AND ', TRUE);
@@ -426,7 +431,7 @@ class sql {
 			self::set_data($data), $where
 		));
 	}
-	
+
 	public static function delete($name, $where) {
 		self::$db->query(sprintf(
 			'DELETE FROM `%s` WHERE %s', $name,
