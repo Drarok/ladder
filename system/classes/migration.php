@@ -75,7 +75,11 @@ abstract class Migration {
 		$migration_path = LADDER_APPPATH.'migrations'.DS;
 
 		// Append the filename skeleton.
-		$migration_path .= sprintf('%05d-*', (int) $id);
+		if ($id > 1000000000) {
+			$migration_path .= $id . '.php';
+		} else {
+			$migration_path .= sprintf('%05d-*', (int) $id);
+		}
 
 		// Look on the filesystem for it.
 		$files = glob($migration_path);
