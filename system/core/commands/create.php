@@ -5,24 +5,34 @@ if (! is_dir(LADDER_APPPATH.'migrations')) {
 	mkdir(LADDER_APPPATH.'migrations');
 }
 
-// Find all the files we should work with.
-$files = glob(LADDER_APPPATH.'migrations/*.php');
+// Try to use unnamed arg if no name passed.
+if ($params['name'] === FALSE) {
+	global $args;
+	if (! empty($args[0])) {
+		$params['name'] = $args[0];
+	}
+}
 
-// Order by filename, as sometimes they come back in a different order.
-sort($files);
+// Calculate the new id.
+if (! Config::item('config.timestamp-ids')) {
+	if (! $params['name']) {
+		// Sequential migrations require a name.
+		throw new Exception('No migration name supplied.');
+	}
 
-// Grab the migration id from the last item in the array.
-list($migration_id) = explode('-', basename(end($files)));
+	// Calculate the next sequential migration id.
+	$files = glob(LADDER_APPPATH.'migrations/*.php');
+	sort($files);
+	list($migration_id) = explode('-', basename(end($files)));
+	$new_id = sprintf('%05d', 1 + (int) $migration_id);
 
-// Try to use unnamed arg 2 if no name passed.
-if ($params['name'] === FALSE)
-	$params['name'] = $params['migrate-to'];
-
-// Add one to it by chopping out just the bit we need.
-$new_id = sprintf('%05d', 1 + (int) $migration_id);
-
-// Build the new filename.
-$file_name = $new_id.'-'.$params['name'].'.php';
+	// Build the new filename.
+	$file_name = $new_id.'-'.$params['name'].'.php';
+} else {
+	// Just use a timestamp.
+	$new_id = time();
+	$file_name = $new_id . '.php';
+}
 
 // Translate filename to classname.
 $migration_name = Migration::class_name($file_name);
