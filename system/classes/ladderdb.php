@@ -4,14 +4,14 @@ class LadderDB {
 	protected $conn;
 	protected $databases;
 	protected $database_id;
-	
+
 	protected static $instance;
-	
+
 	public static function factory() {
 		if (! (bool) self::$instance) {
 			new LadderDB;
 		}
-		
+
 		return self::$instance;
 	}
 
@@ -19,7 +19,7 @@ class LadderDB {
 		if (! self::$instance) {
 			self::$instance = $this;
 		}
-		
+
 		$this->database_id = -1;
 	}
 
@@ -66,14 +66,14 @@ class LadderDB {
 		$version = $this->query('SELECT @@version');
 		$version = mysql_fetch_row($version);
 		$version = $version[0];
-		
+
 		echo sprintf('Connected. Server version %s.', $version), PHP_EOL;
 
 		if ($this->database_id > -1) {
 			if (! mysql_select_db($this->name, $this->conn))
 				throw new Exception('Invalid database: '.$this->name);
 		}
-		
+
 		hooks::run_hooks(hooks::DATABASE_CONNECT);
 	}
 
@@ -106,7 +106,7 @@ class LadderDB {
 		if ($show_sql) {
 			echo $sql, "\n";
 		}
-		
+
 		$res = mysql_query($sql, $this->conn);
 
 		if (! (bool) $res) {
@@ -135,7 +135,7 @@ class LadderDB {
 
 	public function next_database($output = TRUE) {
 		$this->connect();
-		
+
 		if (! (bool) $this->databases) {
 			$this->databases = (array) Config::item('database.database');
 		}
@@ -168,18 +168,18 @@ class LadderDB {
 
 		return $table_name;
 	}
-	
+
 	/**
 	 * Get the name of the kvdata table.
 	 * @since 0.6.0
 	 */
 	public function get_kvdata_table() {
 		static $table_name;
-		
+
 		if (! (bool) $table_name) {
 			$table_name = Config::item('database.kvdata_table', 'migrations_kvdata');
 		}
-			
+
 		return $table_name;
 	}
 
@@ -196,7 +196,7 @@ class LadderDB {
 				->execute()
 			;
 		}
-		
+
 		// Ensure that the new `kvdata` table exists, and is the right structure.
 		if (! Table::exists($this->get_kvdata_table())) {
 			Table::factory($this->get_kvdata_table())
@@ -209,7 +209,7 @@ class LadderDB {
 		} else {
 			// Ensure the on-disk structure matches the new format.
 			$kvdata_table = Table::factory($this->get_kvdata_table(), TRUE);
-			
+
 			if (! array_key_exists('key', $kvdata_table->get_columns())) {
 				echo 'WARNING: Upgrading kvdata store...', PHP_EOL;
 
@@ -220,9 +220,9 @@ class LadderDB {
 					->index('primary', array('migration', 'key'))
 					->execute()
 				;
-				
+
 				$kvdata_rows = $kvdata_table->select();
-				
+
 				foreach ($kvdata_rows as $row) {
 					$row = (object) $row;
 					$data = unserialize($row->kvdata);
@@ -234,7 +234,7 @@ class LadderDB {
 						));
 					}
 				}
-				
+
 				// Archive the old table, and move the new table into place.
 				$kvdata_table->rename($this->get_kvdata_table() . '_old');
 				$kvdata_temp->rename($this->get_kvdata_table());
@@ -297,7 +297,7 @@ class LadderDB {
 			$this->get_migrations_table(), (int) $id
 		));
 	}
-	
+
 	/**
 	 * Return an array containing all the tables in the current database.
 	 * @return array
@@ -305,21 +305,21 @@ class LadderDB {
 	 */
 	public function get_tables() {
 		$query = $this->query('SHOW TABLES');
-		
+
 		$system_tables = array(
 			$this->get_migrations_table(),
 			$this->get_kvdata_table(),
 		);
-		
+
 		$tables = array();
 		while ((bool) $row = mysql_fetch_row($query)) {
 			if (in_array($row[0], $system_tables)) {
 				continue;
 			}
-			
+
 			$tables[] = $row[0];
 		}
-		
+
 		return $tables;
 	}
 }
