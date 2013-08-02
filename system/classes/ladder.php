@@ -71,12 +71,7 @@ final class Ladder {
 
 		foreach ($migration_files as $file_path) {
 			$file_name = basename($file_path);
-			$migration_parts = explode('-', $file_name, 2);
-			if (count($migration_parts) == 1 && $migration_parts[0] > 1000000000) {
-				$migration_id = $migration_name = $migration_parts[0];
-			} else {
-				list($migration_id, $migration_name) = $migration_parts;
-			}
+			$migration_id = (int) $file_name;
 
 			// Ignore invalid or 0 ids.
 			if ((int) $migration_id === 0) {
