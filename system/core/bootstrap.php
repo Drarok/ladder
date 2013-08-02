@@ -16,7 +16,7 @@ global $params;
 $params = array(
 	'config' => Config::item('config.config', 'default'),
 	'name' => FALSE,
-	'migrate-to' => 99999,
+	'migrate-to' => 'latest',
 	'with-data' => Config::item('config.with-data', TRUE),
 	'simulate' => FALSE,
 	'database' => FALSE,

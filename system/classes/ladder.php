@@ -59,10 +59,11 @@ final class Ladder {
 		);
 		$migration_files = glob(LADDER_APPPATH.'migrations/*.php');
 
-		if ($migrate_to == 99999)
-			$migrate_to = 'latest';
-
 		echo "\n", ucfirst($method), sprintf('grading `%s` from %d to %s', $this->db->name, $current_migration, $migrate_to), "\n";
+
+		if ($migrate_to == 'latest') {
+			$migrate_to = 2147483647; // 32-bit safe, and timestamp-safe until 2038.
+		}
 
 		// Sort the items so to run them in order.
 		$sort($migration_files);
@@ -95,8 +96,9 @@ final class Ladder {
 			// Translate filename to classname.
 			$migration_name = Migration::class_name($file_path);
 
-			if ($simulate === TRUE)
+			if ($simulate === TRUE) {
 				echo '(simulated) ';
+			}
 
 			echo "\t", $migration_name, '->', $method, "\n";
 
