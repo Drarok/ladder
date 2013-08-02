@@ -343,8 +343,9 @@ class sql {
 	 * Add in defaults if they're required.
 	 */
 	private static function parsefieldoptions($type, $options) {
-		if ($type == 'string')
+		if ($type == 'string') {
 			$type = 'varchar';
+		}
 
 		$defaults = array_merge(self::$defaults, self::$overrides);
 
