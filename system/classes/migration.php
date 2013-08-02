@@ -186,7 +186,11 @@ abstract class Migration {
 			$migration_class = Migration::class_name($migration_path);
 
 			if (! (bool) $full_name) {
-				$migration_class = substr($migration_class, 0, -16);
+				if ($id > 1000000000) {
+					$migration_class = substr($migration_class, strlen('Migration_'));
+				} else {
+					$migration_class = substr($migration_class, 0, -16);
+				}
 			}
 
 			$result[$id] = $migration_class;
