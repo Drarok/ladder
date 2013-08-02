@@ -13,26 +13,29 @@ if ($params['name'] === FALSE) {
 	}
 }
 
+if (! $params['name']) {
+	throw new Exception('No migration name supplied.');
+}
+
+// Validate the name.
+if (! preg_match('/[a-zA-Z0-9_-]/', $params['name'])) {
+	throw new Exception('Migration names must use a-z, 0-9, underscore and hyphen only.');
+}
+
 // Calculate the new id.
 if (! Config::item('config.timestamp-ids')) {
-	if (! $params['name']) {
-		// Sequential migrations require a name.
-		throw new Exception('No migration name supplied.');
-	}
-
 	// Calculate the next sequential migration id.
 	$files = glob(LADDER_APPPATH.'migrations/*.php');
 	sort($files);
 	list($migration_id) = explode('-', basename(end($files)));
 	$new_id = sprintf('%05d', 1 + (int) $migration_id);
-
-	// Build the new filename.
-	$file_name = $new_id.'-'.$params['name'].'.php';
 } else {
 	// Just use a timestamp.
 	$new_id = time();
-	$file_name = $new_id . '.php';
 }
+
+// Build the new filename.
+$file_name = $new_id . '-' . $params['name'] . '.php';
 
 // Translate filename to classname.
 $migration_name = Migration::class_name($file_name);
