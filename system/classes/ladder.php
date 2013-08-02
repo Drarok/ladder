@@ -71,11 +71,17 @@ final class Ladder {
 
 		foreach ($migration_files as $file_path) {
 			$file_name = basename($file_path);
-			list($migration_id, $migration_name) = explode('-', $file_name, 2);
+			$migration_parts = explode('-', $file_name, 2);
+			if (count($migration_parts) == 1 && $migration_parts[0] > 1000000000) {
+				$migration_id = $migration_name = $migration_parts[0];
+			} else {
+				list($migration_id, $migration_name) = $migration_parts;
+			}
 
 			// Ignore invalid or 0 ids.
-			if ((int) $migration_id === 0)
-				continue; 
+			if ((int) $migration_id === 0) {
+				continue;
+			}
 
 			// Don't run ones that we've not been told to...
 			if ($method == 'up' AND ($migration_id > $migrate_to))
@@ -96,7 +102,7 @@ final class Ladder {
 
 			if ($simulate === TRUE)
 				echo '(simulated) ';
-				
+
 			echo "\t", $migration_name, '->', $method, "\n";
 
 			sql::reset_defaults();
@@ -132,7 +138,7 @@ final class Ladder {
 
 	public static function select($sql, $field = FALSE, $value = FALSE) {
 		$res = LadderDB::factory()->query($sql);
-		
+
 		if ($res === TRUE)
 			throw new Exception('Invalid query for select: '.$sql);
 
@@ -169,7 +175,7 @@ final class Ladder {
 
 		echo 'PHP Error: ', "\t", $errno, PHP_EOL;
 		echo "\t\t", $errstr, PHP_EOL;
-		
+
 		debug_print_backtrace();
 
 		/*
@@ -183,15 +189,15 @@ final class Ladder {
 		echo sprintf(
 			'Uncaught exception \'%s\' with message:', get_class($exception)
 		), PHP_EOL;
-		
+
 		echo sprintf(
 			"\t".'\'%s\' in %s [%s]',
 			$exception->getMessage(), $exception->getFile(),
 			$exception->getLine()
 		), PHP_EOL;
-		
+
 		echo 'Stack Trace:', PHP_EOL;
-		
+
 		// Get the stack trace information.
 		$trace = $exception->getTrace();
 		$traceline = "\t".'#%s %s(%s): %s(%s)';
@@ -220,13 +226,13 @@ final class Ladder {
 	public static function path() {
 		// Get the arguments passed to the method.
 		$params = func_get_args();
-		
+
 		// Prepend the application path.
 		array_unshift($params, rtrim(LADDER_APPPATH, DS));
-		
+
 		return implode(DS, $params);
 	}
-	
+
 	/**
 	 * Get the contents of a file, using the Ladder::path() helper method
 	 * to build the path.
@@ -239,12 +245,12 @@ final class Ladder {
 		// Get the params passed and pass through Ladder::path.
 		$params = func_get_args();
 		$path = call_user_func_array(array('Ladder', 'path'), $params);
-		
+
 		// Throw an exception if the file doesn't exist.
 		if (! file_exists($path)) {
 			throw new Exception('No such file at path: '.$path);
 		}
-		
+
 		// Return the contents.
 		return file_get_contents($path);
 	}
