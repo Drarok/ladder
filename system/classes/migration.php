@@ -94,7 +94,7 @@ abstract class Migration {
 	 * @return mixed Either boolean FALSE on failure, or the class name.
 	 */
 	public static function class_name($file_name) {
-		// Pass integers through Migration::class_name first.
+		// Pass integers through Migration::file_name first.
 		if (is_numeric($file_name)) {
 			$file_name = Migration::file_name($file_name);
 			if ($file_name === FALSE) {
@@ -108,12 +108,17 @@ abstract class Migration {
 		// Split the id and name apart.
 		$parts = explode('-', $file_name, 2);
 
-		// We should always end up with 2 parts.
+		// Detect timestamps and return the new format.
+		if (count($parts) == 1 && $parts[0] > 1000000000) {
+			return 'Migration_' . $parts[0];
+		}
+
+		// We should always end up with 2 parts for sequential ids.
 		if (count($parts) != 2) {
 			return FALSE;
 		}
 
-		// Return the class name.
+		// Return the sequential class name.
 		return sprintf(
 			'%s_Migration_%05d',
 			implode('_', array_map('ucfirst', explode('_', $parts[1]))),
