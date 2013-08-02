@@ -4,22 +4,37 @@ class sql {
 	protected static $db;
 
 	protected static $defaults = array(
-		'varbinary' => array('limit' => 255, 'null' => TRUE),
-		'varchar' => array('limit' => 255, 'null' => TRUE),
 		'binary' => array('limit' => 255, 'null' => TRUE),
+		'varbinary' => array('limit' => 255, 'null' => TRUE),
+
 		'char' => array('limit' => 255, 'null' => TRUE),
+		'varchar' => array('limit' => 255, 'null' => TRUE),
+
 		'tinyint' => array('null' => TRUE),
 		'smallint' => array('null' => TRUE),
 		'mediumint' => array('null' => TRUE),
 		'integer' => array('null' => TRUE, 'autoincrement' => FALSE),
 		'bigint' => array('null' => TRUE),
+
+		'timestamp' => array('null' => FALSE, 'default' => 'CURRENT_TIMESTAMP', 'on update' => 'CURRENT_TIMESTAMP'),
 		'datetime' => array('null' => TRUE),
 		'date' => array('null' => TRUE),
+		'time' => array('null' => TRUE),
+
 		'float' => array('limit' => '9,3', 'null' => TRUE),
 		'decimal' => array('limit' => '9,3', 'null' => TRUE),
-		'text' => array('null' => TRUE),
+
+		'tinyblob'  => array('null' => TRUE),
+		'blob'  => array('null' => TRUE),
+		'mediumblob'  => array('null' => TRUE),
+		'longblob'  => array('null' => TRUE),
+
+		'tinytext'  => array('null' => TRUE),
+		'text'  => array('null' => TRUE),
+		'mediumtext'  => array('null' => TRUE),
+		'longtext'  => array('null' => TRUE),
+
 		'enum' => array('null' => TRUE),
-		'timestamp' => array('null' => FALSE, 'default' => 'CURRENT_TIMESTAMP', 'on update' => 'CURRENT_TIMESTAMP'),
 	);
 
 	protected static $overrides;
