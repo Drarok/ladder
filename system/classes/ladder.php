@@ -39,8 +39,14 @@ final class Ladder {
 	public function migrate($migrate_to, $simulate = FALSE) {
 		$current_migration = $this->db->get_current_migration();
 
-		if ($migrate_to == $current_migration)
-			throw new Exception('Already at migration '.$migrate_to);
+		$migrate_target = $migrate_to;
+		if ($migrate_to == 'latest') {
+			$migrate_to = 2147483647; // 32-bit safe, and timestamp-safe until 2038.
+		}
+
+		if ($migrate_to == $current_migration) {
+			throw new Exception('Already at migration '.$migrate_target);
+		}
 
 		if ($migrate_to < $current_migration) {
 			$method = 'down';
@@ -59,11 +65,7 @@ final class Ladder {
 		);
 		$migration_files = glob(LADDER_APPPATH.'migrations/*.php');
 
-		echo "\n", ucfirst($method), sprintf('grading `%s` from %d to %s', $this->db->name, $current_migration, $migrate_to), "\n";
-
-		if ($migrate_to == 'latest') {
-			$migrate_to = 2147483647; // 32-bit safe, and timestamp-safe until 2038.
-		}
+		echo "\n", ucfirst($method), sprintf('grading `%s` from %d to %s', $this->db->name, $current_migration, $migrate_target), "\n";
 
 		// Sort the items so to run them in order.
 		$sort($migration_files);
@@ -80,18 +82,21 @@ final class Ladder {
 			}
 
 			// Don't run ones that we've not been told to...
-			if ($method == 'up' AND ($migration_id > $migrate_to))
+			if ($method == 'up' AND ($migration_id > $migrate_to)) {
 				continue;
-			elseif ($method == 'down' AND (($migration_id <= $migrate_to) OR ($migration_id > $current_migration)))
+			} elseif ($method == 'down' AND (($migration_id <= $migrate_to) OR ($migration_id > $current_migration))) {
 				continue;
+			}
 
 			// Skip migrations when upgrading that are already applied.
-			if ($method == 'up' AND in_array((int) $migration_id, $migration_rows))
+			if ($method == 'up' AND in_array((int) $migration_id, $migration_rows)) {
 				continue;
+			}
 
 			// Skip migrations when downgrading that were not previously applied to the db.
-			if ($method == 'down' AND ! in_array((int) $migration_id, $migration_rows))
+			if ($method == 'down' AND ! in_array((int) $migration_id, $migration_rows)) {
 				continue;
+			}
 
 			// Translate filename to classname.
 			$migration_name = Migration::class_name($file_path);
