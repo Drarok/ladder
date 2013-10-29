@@ -39,8 +39,14 @@ final class Ladder {
 	public function migrate($migrate_to, $simulate = FALSE) {
 		$current_migration = $this->db->get_current_migration();
 
-		if ($migrate_to == $current_migration)
-			throw new Exception('Already at migration '.$migrate_to);
+		$migrate_target = $migrate_to;
+		if ($migrate_to == 'latest') {
+			$migrate_to = 2147483647; // 32-bit safe, and timestamp-safe until 2038.
+		}
+
+		if ($migrate_to == $current_migration) {
+			throw new Exception('Already at migration '.$migrate_target);
+		}
 
 		if ($migrate_to < $current_migration) {
 			$method = 'down';
@@ -59,10 +65,7 @@ final class Ladder {
 		);
 		$migration_files = glob(LADDER_APPPATH.'migrations/*.php');
 
-		if ($migrate_to == 99999)
-			$migrate_to = 'latest';
-
-		echo "\n", ucfirst($method), sprintf('grading `%s` from %d to %s', $this->db->name, $current_migration, $migrate_to), "\n";
+		echo "\n", ucfirst($method), sprintf('grading `%s` from %d to %s', $this->db->name, $current_migration, $migrate_target), "\n";
 
 		// Sort the items so to run them in order.
 		$sort($migration_files);
@@ -71,32 +74,37 @@ final class Ladder {
 
 		foreach ($migration_files as $file_path) {
 			$file_name = basename($file_path);
-			list($migration_id, $migration_name) = explode('-', $file_name, 2);
+			$migration_id = (int) $file_name;
 
 			// Ignore invalid or 0 ids.
-			if ((int) $migration_id === 0)
-				continue; 
+			if ((int) $migration_id === 0) {
+				continue;
+			}
 
 			// Don't run ones that we've not been told to...
-			if ($method == 'up' AND ($migration_id > $migrate_to))
+			if ($method == 'up' AND ($migration_id > $migrate_to)) {
 				continue;
-			elseif ($method == 'down' AND (($migration_id <= $migrate_to) OR ($migration_id > $current_migration)))
+			} elseif ($method == 'down' AND (($migration_id <= $migrate_to) OR ($migration_id > $current_migration))) {
 				continue;
+			}
 
 			// Skip migrations when upgrading that are already applied.
-			if ($method == 'up' AND in_array((int) $migration_id, $migration_rows))
+			if ($method == 'up' AND in_array((int) $migration_id, $migration_rows)) {
 				continue;
+			}
 
 			// Skip migrations when downgrading that were not previously applied to the db.
-			if ($method == 'down' AND ! in_array((int) $migration_id, $migration_rows))
+			if ($method == 'down' AND ! in_array((int) $migration_id, $migration_rows)) {
 				continue;
+			}
 
 			// Translate filename to classname.
 			$migration_name = Migration::class_name($file_path);
 
-			if ($simulate === TRUE)
+			if ($simulate === TRUE) {
 				echo '(simulated) ';
-				
+			}
+
 			echo "\t", $migration_name, '->', $method, "\n";
 
 			sql::reset_defaults();
@@ -132,7 +140,7 @@ final class Ladder {
 
 	public static function select($sql, $field = FALSE, $value = FALSE) {
 		$res = LadderDB::factory()->query($sql);
-		
+
 		if ($res === TRUE)
 			throw new Exception('Invalid query for select: '.$sql);
 
@@ -169,7 +177,7 @@ final class Ladder {
 
 		echo 'PHP Error: ', "\t", $errno, PHP_EOL;
 		echo "\t\t", $errstr, PHP_EOL;
-		
+
 		debug_print_backtrace();
 
 		/*
@@ -183,15 +191,15 @@ final class Ladder {
 		echo sprintf(
 			'Uncaught exception \'%s\' with message:', get_class($exception)
 		), PHP_EOL;
-		
+
 		echo sprintf(
 			"\t".'\'%s\' in %s [%s]',
 			$exception->getMessage(), $exception->getFile(),
 			$exception->getLine()
 		), PHP_EOL;
-		
+
 		echo 'Stack Trace:', PHP_EOL;
-		
+
 		// Get the stack trace information.
 		$trace = $exception->getTrace();
 		$traceline = "\t".'#%s %s(%s): %s(%s)';
@@ -220,13 +228,13 @@ final class Ladder {
 	public static function path() {
 		// Get the arguments passed to the method.
 		$params = func_get_args();
-		
+
 		// Prepend the application path.
 		array_unshift($params, rtrim(LADDER_APPPATH, DS));
-		
+
 		return implode(DS, $params);
 	}
-	
+
 	/**
 	 * Get the contents of a file, using the Ladder::path() helper method
 	 * to build the path.
@@ -239,12 +247,12 @@ final class Ladder {
 		// Get the params passed and pass through Ladder::path.
 		$params = func_get_args();
 		$path = call_user_func_array(array('Ladder', 'path'), $params);
-		
+
 		// Throw an exception if the file doesn't exist.
 		if (! file_exists($path)) {
 			throw new Exception('No such file at path: '.$path);
 		}
-		
+
 		// Return the contents.
 		return file_get_contents($path);
 	}

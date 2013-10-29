@@ -16,7 +16,7 @@ global $params;
 $params = array(
 	'config' => Config::item('config.config', 'default'),
 	'name' => FALSE,
-	'migrate-to' => 99999,
+	'migrate-to' => 'latest',
 	'with-data' => Config::item('config.with-data', TRUE),
 	'simulate' => FALSE,
 	'database' => FALSE,
@@ -28,12 +28,16 @@ $params = array(
 );
 
 // Grab all the params from the command-line.
+global $args;
+$args = array();
+
 $unnamed_id = 0;
 foreach ($_SERVER['argv'] as $arg) {
 	if ('--' !== substr($arg, 0, 2)) {
 		// Unnamed params...
-		if ($unnamed_id == 2)
+		if ($unnamed_id == 2) {
 			$params['migrate-to'] = $arg;
+		}
 		$args[$unnamed_id++] = $arg;
 	} else {
 		// Named params...
@@ -60,11 +64,11 @@ Config::set_config($params['config']);
 if ((bool) Config::item('config.kohana-index')) {
 	// Import the Kohana code.
 	Config::kohana();
-	
+
 	// Force the database configuration to be loaded.
 	Kohana::config_load('database');
-	
-	// Overwrite the 'default' group with the one we want to use. 
+
+	// Overwrite the 'default' group with the one we want to use.
 	Kohana::config_set('database.default', Kohana::config('database.'.$params['config']));
 }
 

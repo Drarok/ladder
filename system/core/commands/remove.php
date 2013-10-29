@@ -6,7 +6,7 @@
 
 $migration_id = (int) $params['migrate-to'];
 
-if (! (bool) $migration_id OR $migration_id == '99999') {
+if (! (bool) $migration_id) {
 	echo 'Invalid migration id: ', $migration_id, "\n";
 	exit(1);
 }

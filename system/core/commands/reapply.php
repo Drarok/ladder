@@ -2,7 +2,7 @@
 
 // Validate the parameters.
 $migration_id = (int) $params['migrate-to'];
-if (! (bool) $migration_id || $migration_id == 99999) {
+if (! (bool) $migration_id) {
 	die('Invalid migration: '.$migration_id);
 }
 

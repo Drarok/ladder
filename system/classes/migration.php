@@ -17,7 +17,7 @@ abstract class Migration {
 
 	/**
 	 * $import_update mixed Should imports perform and UPDATE instead of an
-	 * INSERT? Either boolean TRUE/FALSE for all imports, or an array of 
+	 * INSERT? Either boolean TRUE/FALSE for all imports, or an array of
 	 * table names.
 	 */
 	protected $import_update = FALSE;
@@ -94,7 +94,7 @@ abstract class Migration {
 	 * @return mixed Either boolean FALSE on failure, or the class name.
 	 */
 	public static function class_name($file_name) {
-		// Pass integers through Migration::class_name first.
+		// Pass integers through Migration::file_name first.
 		if (is_numeric($file_name)) {
 			$file_name = Migration::file_name($file_name);
 			if ($file_name === FALSE) {
@@ -108,12 +108,17 @@ abstract class Migration {
 		// Split the id and name apart.
 		$parts = explode('-', $file_name, 2);
 
-		// We should always end up with 2 parts.
+		// Detect timestamps and return the new format.
+		if (! empty($parts[0]) && $parts[0] > 1000000000) {
+			return 'Migration_' . $parts[0];
+		}
+
+		// We should always end up with 2 parts for sequential ids.
 		if (count($parts) != 2) {
 			return FALSE;
 		}
 
-		// Return the class name.
+		// Return the sequential class name.
 		return sprintf(
 			'%s_Migration_%05d',
 			implode('_', array_map('ucfirst', explode('_', $parts[1]))),
@@ -132,7 +137,7 @@ abstract class Migration {
 		// Search the filesystem and sort.
 		$migrations = glob($migrations_path);
 		sort($migrations);
-		
+
 		// Initialise the result.
 		$result = array();
 
@@ -166,7 +171,10 @@ abstract class Migration {
 	}
 
 	/**
-	 * Get an associative array of <id> => <class_name>.
+	 * Get an associative array of <id> => <name>.
+	 *
+	 * @param bool $full_name Pass true to get the full class name, or false for the simple name.
+	 *
 	 * @return array
 	 */
 	public static function get_migration_names($full_name = FALSE) {
@@ -178,10 +186,19 @@ abstract class Migration {
 
 		// Loop over each file and get its class name.
 		foreach ($migrations as $id => $migration_path) {
-			$migration_class = Migration::class_name($migration_path);
-
 			if (! (bool) $full_name) {
-				$migration_class = substr($migration_class, 0, -16);
+				$migration_class = Migration::class_name($migration_path);
+
+				if ($id > 1000000000) {
+					$file_name = basename($migration_path, '.php');
+					$file_parts = explode('-', $file_name, 2);
+					if (count($file_parts) != 2 || empty($file_parts[1])) {
+						throw new Exception('Failed to work out name from ' . $file_name);
+					}
+					$migration_class = $file_parts[1];
+				} else {
+					$migration_class = substr($migration_class, 0, -16);
+				}
 			}
 
 			$result[$id] = $migration_class;
@@ -234,7 +251,7 @@ abstract class Migration {
 	 */
 	protected function init() {
 	}
-	
+
 	/**
 	 * Default implementation of finalise does nothing, but subclasses
 	 * may override if to do any cleanup after the migrations has run.
@@ -278,17 +295,17 @@ abstract class Migration {
 						echo "\t", 'Warning: ', $e->getMessage(), ' when trying to unimport.', PHP_EOL;
 					}
 				}
-				
+
 				if ($method == 'up') {
 					// Make sure the key-value data is stored after an upgrade.
 					KVDataCache::instance()->save();
-					
+
 					// Let the hooks system know we're done.
 					hooks::run_hooks(hooks::MIGRATION_UP);
 				} elseif ($method == 'down') {
 					// Remove the key-value data after a downgrade.
 					KVDataCache::instance()->remove($this->id);
-					
+
 					// Let the hooks system know we're done.
 					hooks::run_hooks(hooks::MIGRATION_DOWN);
 				}
@@ -306,10 +323,10 @@ abstract class Migration {
 		if ($key === 'id' OR $key === 'id_padded') {
 			// Explode the class name, it's like Something_Name_Migraton_00001
 			$parts = explode('_', get_class($this));
-			
+
 			// Get the last element from the array.
 			$number = end($parts);
-			
+
 			// Return the id as an integer or string.
 			if ($key === 'id') {
 				return (int) $number;
@@ -328,7 +345,7 @@ abstract class Migration {
 
 	/**
 	 * Create an instance of Table representing a new table.
-	 * @return Table 
+	 * @return Table
 	 * @param string $name Name of the new table to create.
 	 */
 	protected function create_table($name, $options = NULL) {
@@ -351,7 +368,7 @@ abstract class Migration {
 
 		return $this->tables[$name];
 	}
-	
+
 	protected function import_data() {
 		if (! (bool) $this->import_data) {
 			return;
@@ -459,11 +476,11 @@ abstract class Migration {
 	protected function data($name) {
 		// Files are always lower-case.
 		$name = strtolower($name);
-		
+
 		// Use the ladder class to get the file data.
 		return Ladder::file('migrations', 'data', $this->id_padded.'_'.$name);
 	}
-	
+
 	/**
 	 * Allow migrations to store key-value pairs in the database.
 	 * @param string $key Key to store the data against.
@@ -474,7 +491,7 @@ abstract class Migration {
 		$cache = KVDataCache::instance();
 		$cache->set($this->id, $key, $value);
 	}
-	
+
 	/**
 	 * Allow migrations to fetch the key-value pairs stored in the database.
 	 * @param $key[optional] string The key to fetch the value for, or nothing to get all data.
@@ -487,10 +504,10 @@ abstract class Migration {
 		if (! (bool) $id) {
 			$id = $this->id;
 		}
-		
+
 		return KVDataCache::instance()->get($id, $key, $default);
 	}
-	
+
 	/**
 	 * Allow migrations to remove all their data (such as for a down() method).
 	 * @param $key[optional] The key to remove, or nothing to remove all data.
