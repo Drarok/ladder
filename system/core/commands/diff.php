@@ -366,10 +366,17 @@ class FieldParser {
 
 		// Post-process the type.
 		if ((bool) preg_match('/([a-z]+)\(([\d,]+)\)/i', $type, $matches)) {
+			// types like type(length), i.e. varchar(25) or int(7)
 			$this->type = $matches[1];
 			$this->limit = $matches[2];
 			$this->enum_options = array();
+		} elseif ((bool) preg_match('/([a-z]+)/i', $type, $matches)) {
+			// types with no length in parentheses, like timestamp
+			$this->type = $matches[1];
+			$this->limit = 0;
+			$this->enum_options = array();
 		} elseif ((bool) preg_match('/(enum)\((.*?)\)/i', $type, $matches)) {
+			// enum sets
 			$this->type = $matches[1];
 			$this->limit = NULL;
 			$this->parse_enum_options($matches[2]);
