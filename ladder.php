@@ -3,10 +3,7 @@
 
 // This hack is to get the directory that Ladder is being used in,
 // based on default Composer settings.
-$application_path = implode(DIRECTORY_SEPARATOR, array(
-	getcwd(),
-	'ladder',
-));
+$application_path = __DIR__;
 
 // The system path we actually want to resolve the symlink.
 $system_path = __DIR__ . '/system';
