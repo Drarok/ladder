@@ -366,7 +366,7 @@ class FieldParser {
 		if ((bool) preg_match('/([a-z]+)\(([\d,]+)\)/i', $this->type, $matches)) {
 			$this->type = $matches[1];
 			$this->limit = $matches[2];
-		} elseif ((bool) preg_match('/(enum)\((.*?)\)/i', $type, $matches)) {
+		} elseif ((bool) preg_match('/(enum)\((.*?)\)/i', $this->type, $matches)) {
 			$this->type = $matches[1];
 			$this->parse_enum_options($matches[2]);
 		}
