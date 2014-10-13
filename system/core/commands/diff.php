@@ -19,41 +19,41 @@ while ($db->next_database()) {
 				$old_tables[substr($key, 6)] = $value;
 			}
 		}
-		
+
 		$new_tables = array_diff($db->get_tables(), array_keys($old_tables));
-		
+
 		if ((bool) $new_tables) {
 			foreach ($new_tables as $table_name) {
 				if (in_array($table_name, $ignore_tables)) {
 					continue;
 				}
-				
+
 				echo "\t", sprintf(
 					'$this->create_table(\'%s\')',
 					$table_name
 				), PHP_EOL;
-				
+
 				$table = Table::factory($table_name);
-				
+
 				$primary_columns = $table->primary_columns();
 				$standard_primary_key = (
 					(count($primary_columns) == 1) AND
 					($primary_columns[0] == 'id')
 				);
-				
+
 				foreach ($table->get_columns() as $column => $info) {
 					if (($column == 'id') AND $standard_primary_key) {
 						continue;
 					}
-					
+
 					echo "\t\t", parse_field_info($info), PHP_EOL;
 				}
-				
+
 				foreach ($table->get_indexes() as $index => $info) {
 					if (($index == 'PRIMARY') AND $standard_primary_key) {
 						continue;
 					}
-					
+
 					$unique = FALSE;
 					$index_fields = array();
 					foreach ($info as $index_info) {
@@ -66,16 +66,16 @@ while ($db->next_database()) {
 						$unique ? ', array(\'unique\' => TRUE)' : FALSE
 					), PHP_EOL;
 				}
-				
+
 				echo "\t;", PHP_EOL, PHP_EOL;
 			}
 		}
-		
+
 		foreach ((array) $old_tables as $table_name => $info) {
 			if (in_array($table_name, $ignore_tables)) {
 				continue;
 			}
-			
+
 			// Get the info out of the array.
 			$prev_columns = $info['columns'];
 			$prev_indexes = $info['indexes'];
@@ -83,7 +83,7 @@ while ($db->next_database()) {
 				? $info['data']
 				: NULL
 			;
-			
+
 			// Get current info.
 			if (! Table::exists($table_name)) {
 				echo "\t", sprintf(
@@ -100,7 +100,7 @@ while ($db->next_database()) {
 				? NULL
 				: $current_table->select_primary()
 			;
-			
+
 			// Compare table info.
 			$new_columns = array_diff(array_keys($current_columns), array_keys($prev_columns));
 			$missing_columns = array_diff(array_keys($prev_columns), array_keys($current_columns));
@@ -118,10 +118,10 @@ while ($db->next_database()) {
 					}
 				}
 			}
-			
+
 			$new_indexes = array_diff(array_keys($current_indexes), array_keys($prev_indexes));
 			$missing_indexes = array_diff(array_keys($prev_indexes), array_keys($current_indexes));
-			
+
 			if ($prev_data === NULL) {
 				$new_rows = array();
 				$missing_rows = array();
@@ -146,7 +146,7 @@ while ($db->next_database()) {
 					}
 				}
 			}
-			
+
 			if (
 				(bool) $new_columns OR
 				(bool) $missing_columns OR
@@ -158,14 +158,14 @@ while ($db->next_database()) {
 				(bool) $diff_rows
 			) {
 				echo "\t", '$this->table(\'', $table_name, '\')', PHP_EOL;
-				
+
 				if ((bool) $missing_columns) {
 					echo "\t\t", '// Removed Columns', PHP_EOL;
 					foreach ($missing_columns as $column) {
 						echo "\t\t", sprintf('->drop_column(\'%s\')', $column), PHP_EOL;
 					}
 				}
-				
+
 				if ((bool) $new_columns) {
 					$column_names = array_keys($current_columns);
 
@@ -200,14 +200,14 @@ while ($db->next_database()) {
 						echo "\t\t", parse_field_info($current_columns[$column], TRUE), PHP_EOL;
 					}
 				}
-				
+
 				if ((bool) $missing_indexes) {
 					echo "\t\t", '// Removed Indexes', PHP_EOL;
 					foreach ($missing_indexes as $index) {
 						echo "\t\t", sprintf('->drop_index(\'%s\')', $index), PHP_EOL;
 					}
 				}
-				
+
 				if ((bool) $new_indexes) {
 					echo "\t\t", '// New Indexes', PHP_EOL;
 					foreach ($new_indexes as $index) {
@@ -224,13 +224,13 @@ while ($db->next_database()) {
 						), PHP_EOL;
 					}
 				}
-				
+
 				if ((bool) $missing_rows OR (bool) $new_rows OR (bool) $diff_rows) {
 					$primary_columns = $current_table->primary_columns();
-					
+
 					if (count($primary_columns) == 1) {
 						$primary_column = $primary_columns[0];
-				
+
 						if ((bool) $missing_rows) {
 							echo "\t\t", '// Removed Rows', PHP_EOL;
 							foreach ($missing_rows as $key_value) {
@@ -240,7 +240,7 @@ while ($db->next_database()) {
 								), PHP_EOL;
 							}
 						}
-				
+
 						if ((bool) $new_rows) {
 							echo "\t\t", '// New Rows', PHP_EOL;
 							foreach ($new_rows as $key_value) {
@@ -267,7 +267,7 @@ while ($db->next_database()) {
 						}
 					}
 				}
-				
+
 				echo "\t;", PHP_EOL, PHP_EOL;
 			}
 		}
@@ -276,10 +276,10 @@ while ($db->next_database()) {
 
 function parse_field_info($field_info, $alter = FALSE, $after = NULL) {
 	$parser = FieldParser::factory($field_info);
-	
+
 	// Build up the options string.
 	$options = 'array(';
-	
+
 	if ((bool) $parser->limit) {
 		if (strpos($parser->limit, ',') === FALSE) {
 			$options .= sprintf('\'limit\' => %d, ', (int) $parser->limit);
@@ -287,7 +287,7 @@ function parse_field_info($field_info, $alter = FALSE, $after = NULL) {
 			$options .= sprintf('\'limit\' => \'%s\', ', $parser->limit);
 		}
 	}
-	
+
 	$options .= sprintf('\'null\' => %s, ', $parser->null ? 'TRUE' : 'FALSE');
 	$options .= sprintf('\'default\' => %s, ', sql::escape($parser->default));
 
@@ -300,10 +300,10 @@ function parse_field_info($field_info, $alter = FALSE, $after = NULL) {
 	if ((bool) $parser->enum_options) {
 		$options .= sprintf('\'options\' => array(%s), ', implode(', ', array_map('sql::escape', $parser->enum_options)));
 	}
-	
+
 	// Trim the trailing comma-space, close the array.
 	$options = substr($options, 0, -2).')';
-	
+
 	// Output the migration code.
 	return sprintf(
 		'->%scolumn(\'%s\', \'%s\', %s)',
@@ -342,8 +342,6 @@ class FieldParser {
 	}
 
 	protected function parse() {
-		$type = NULL;
-
 		foreach ($this->info as $k => $v) {
 			switch ($k) {
 				case 'Field':
@@ -351,7 +349,7 @@ class FieldParser {
 					break;
 
 				case 'Type':
-					$type = $v;
+					$this->type = $v;
 					break;
 
 				case 'Null':
@@ -365,13 +363,11 @@ class FieldParser {
 		}
 
 		// Post-process the type.
-		if ((bool) preg_match('/([a-z]+)\(([\d,]+)\)/i', $type, $matches)) {
+		if ((bool) preg_match('/([a-z]+)\(([\d,]+)\)/i', $this->type, $matches)) {
 			$this->type = $matches[1];
 			$this->limit = $matches[2];
-			$this->enum_options = array();
-		} elseif ((bool) preg_match('/(enum)\((.*?)\)/i', $type, $matches)) {
+		} elseif ((bool) preg_match('/(enum)\((.*?)\)/i', $this->type, $matches)) {
 			$this->type = $matches[1];
-			$this->limit = NULL;
 			$this->parse_enum_options($matches[2]);
 		}
 
