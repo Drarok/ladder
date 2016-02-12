@@ -26,7 +26,7 @@ class Table {
 
 	public function __construct($name, $created = NULL, $options = NULL) {
 		$this->name = $name;
-
+		
 		if ($created === NULL) {
 			// Detect if the table exists.
 			$this->created = Table::exists($name);
@@ -34,7 +34,7 @@ class Table {
 			// Use the passed value.
 			$this->created = (bool) $created;
 		}
-
+		
 		// Setup the instance.
 		$this->clear();
 
@@ -77,7 +77,7 @@ class Table {
 		}
 		return $this->table_columns = $cols;
 	}
-
+	
 	/**
 	 * Get index information from the database.
 	 * @return array
@@ -86,10 +86,10 @@ class Table {
 		if (! (bool) $force_refresh AND (bool) $this->table_indexes) {
 			return $this->table_indexes;
 		}
-
+		
 		$db = LadderDB::factory();
 		$index_query = $db->query(sprintf('SHOW INDEXES FROM `%s`', $this->name));
-
+		
 		$indexes = array();
 		while ($index_row = mysql_fetch_object($index_query)) {
 			if (! array_key_exists($index_row->Key_name, $indexes)) {
@@ -97,7 +97,7 @@ class Table {
 			}
 			$indexes[$index_row->Key_name][] = $index_row;
 		}
-
+		
 		return $this->table_indexes = $indexes;
 	}
 
@@ -121,7 +121,7 @@ class Table {
 		return $this->column('created', 'datetime', array('null' => FALSE))
 			->column('modified', 'datetime');
 	}
-
+	
 	/**
 	 * Add a column to this Table instance.
 	 * @return Table
@@ -348,13 +348,13 @@ class Table {
 
 		return $this;
 	}
-
+	
 	public function data($migration) {
 		$this->execute(); // Ensure the table exists, and has the right fields...
-
+		
 		if ($migration === FALSE)
 			return;
-
+		
 		require_once(sprintf('migrations/data/%s-%s.php',
 			end(explode('_', get_class($migration))), strtolower($this->name)));
 	}
@@ -405,25 +405,25 @@ class Table {
 		// Return the rows!
 		return $result;
 	}
-
+	
 	/**
 	 * Return an array containing the columns from the primary key.
 	 * @return array
 	 */
 	public function primary_columns() {
 		$indexes = $this->get_indexes();
-
+		
 		$result = array();
-
+		
 		if (array_key_exists('PRIMARY', $indexes)) {
 			foreach ($indexes['PRIMARY'] as $column) {
 				$result[] = $column->Column_name;
 			}
 		}
-
+		
 		return $result;
 	}
-
+	
 	/**
 	 * Return an associative array of table data, using the primary key as
 	 * the array keys.
@@ -432,36 +432,36 @@ class Table {
 	 */
 	public function select_primary() {
 		$primary_columns = $this->primary_columns();
-
+		
 		if (count($primary_columns) != 1) {
 			// We can't find a primary key, or it has more than 1 column, so return an empty array.
 			return array();
 		}
-
+		
 		$primary_column = $primary_columns[0];
 		$data = $this->select();
-
+		
 		$result = array();
 		foreach ($data as $row) {
 			$result[$row[$primary_column]] = $row;
 		}
-
+		
 		return $result;
 	}
-
+	
 	public function insert($data, $extra = '') {
 		$this->execute();
 		sql::insert($this->name, $data, $extra);
 		$this->insert_id = sql::insert_id();
 		return $this;
 	}
-
+	
 	public function update($data, $where) {
 		$this->execute();
 		sql::update($this->name, $data, $where);
 		return $this;
 	}
-
+	
 	public function delete($where) {
 		$this->execute();
 		sql::delete($this->name, $where);
@@ -625,7 +625,7 @@ class Table {
 
 		return $this;
 	}
-
+	
 	/**
 	 * Return the row count of the table this instance represents.
 	 * @return int
@@ -634,14 +634,14 @@ class Table {
 	public function row_count() {
 		// Make sure there are no pending updates.
 		$this->execute();
-
+		
 		// Run the SQL.
 		$db = LadderDB::factory();
 		$query = $db->query(sprintf(
 			'SELECT COUNT(*) FROM %s',
 			sql::escape_identifier($this->name)
 		));
-
+		
 		// Get the value and return.
 		$row = mysql_fetch_row($query);
 		return (int) $row[0];
