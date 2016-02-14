@@ -10,7 +10,7 @@ abstract class Migration {
 
 	/**
 	 * $import_data array Table names to import. Prefixed with the migration
-	 * number when loaded from migrations/data. eg 'table' becomes
+	 * number when loaded from LADDER_MIGRATIONPATH/data. eg 'table' becomes
 	 * '00001_table.csv'.
 	 */
 	protected $import_data = array();
@@ -71,11 +71,8 @@ abstract class Migration {
 	 * specifying the full path on success.
 	 */
 	public static function file_name($id) {
-		// Work out the path.
-		$migration_path = LADDER_APPPATH.'migrations'.DS;
-
-		// Append the filename skeleton.
-		$migration_path .= sprintf('%05d-*', (int) $id);
+		// Append the filename skeleton to migrations path.
+		$migration_path = LADDER_MIGRATIONPATH.sprintf('%05d-*', (int) $id);
 
 		// Look on the filesystem for it.
 		$files = glob($migration_path);
@@ -132,7 +129,7 @@ abstract class Migration {
 	 */
 	public static function get_migration_paths() {
 		// Work out the path to our migrations.
-		$migrations_path = LADDER_APPPATH.'migrations'.DS.'*.php';
+		$migrations_path = LADDER_MIGRATIONPATH.'*.php';
 
 		// Search the filesystem and sort.
 		$migrations = glob($migrations_path);
@@ -416,7 +413,7 @@ abstract class Migration {
 				$key_fields = FALSE;
 			}
 
-			$filename = LADDER_APPPATH.sprintf('migrations/data/%s_%s.csv', $this->id_padded, $table);
+			$filename = LADDER_MIGRATIONPATH.sprintf('data/%s_%s.csv', $this->id_padded, $table);
 
 			$this->table($table)
 				->import_csv($filename, $use_update, $key_fields)
@@ -449,7 +446,7 @@ abstract class Migration {
 
 		foreach ($tables as $table) {
 			echo "\t\t", 'Unimporting data for ', $table, PHP_EOL;
-			$filename = LADDER_APPPATH.sprintf('migrations/data/%s_%s.csv', $this->id_padded, $table);
+			$filename = LADDER_MIGRATIONPATH.sprintf('data/%s_%s.csv', $this->id_padded, $table);
 
 			// Check for specified key fields.
 			if ((bool) $this->unimport_key_fields) {
@@ -477,8 +474,17 @@ abstract class Migration {
 		// Files are always lower-case.
 		$name = strtolower($name);
 
-		// Use the ladder class to get the file data.
-		return Ladder::file('migrations', 'data', $this->id_padded.'_'.$name);
+		// Create path to data file
+		$path_segments = array(rtrim(LADDER_MIGRATIONPATH, DS), 'data', $this->id_padded.'_'.$name);
+		$path = implode(DS, $path_segments);
+
+		// Throw an exception if the file doesn't exist.
+		if (! file_exists($path)) {
+			throw new Exception('No such file at path: '.$path);
+		}
+
+		// Return the contents.
+		return file_get_contents($path);
 	}
 
 	/**
