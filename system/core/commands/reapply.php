@@ -7,7 +7,12 @@ if (! (bool) $migration_id) {
 }
 
 // Include the migration file.
-require_once(Migration::file_name($migration_id));
+$migration_file = Migration::file_name($migration_id);
+if($migration_file === FALSE) {
+	echo "Migration $migration_id no found.\n";
+	exit(1);
+}
+require_once($migration_file);
 
 // Get a Database instance.
 $db = LadderDB::factory();
