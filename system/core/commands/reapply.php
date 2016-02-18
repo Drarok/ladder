@@ -8,8 +8,8 @@ if (! (bool) $migration_id) {
 
 // Include the migration file.
 $migration_file = Migration::file_name($migration_id);
-if($migration_file === FALSE) {
-	echo "Migration $migration_id no found.\n";
+if ($migration_file === FALSE) {
+	echo "Migration $migration_id does not exist\n";
 	exit(1);
 }
 require_once($migration_file);
