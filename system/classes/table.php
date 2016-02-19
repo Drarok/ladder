@@ -506,8 +506,8 @@ class Table {
 
 		// Loop over the file and add array elements.
 		while (! feof($csv)) {
-			// Skip errors, and blink lines. Returned as a single null element array.
-			if (! (bool) $row = fgetcsv($csv) OR $row == array(NULL)) {
+			// Skip errors, blank lines and comments. Returned as a single null element array.
+			if (! (bool) $row = fgetcsv($csv) OR $row == array(NULL) OR $row[0][0] == "#") {
 				continue;
 			}
 
