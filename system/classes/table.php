@@ -355,7 +355,7 @@ class Table {
 		if ($migration === FALSE)
 			return;
 		
-		require_once(sprintf('migrations/data/%s-%s.php',
+		require_once(LADDER_MIGRATIONPATH.sprintf('data/%s-%s.php',
 			end(explode('_', get_class($migration))), strtolower($this->name)));
 	}
 

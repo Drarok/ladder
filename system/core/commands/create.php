@@ -1,8 +1,8 @@
 <?php
 
 // Always check the directory exists.
-if (! is_dir(LADDER_APPPATH.'migrations')) {
-	mkdir(LADDER_APPPATH.'migrations');
+if (! is_dir(LADDER_MIGRATIONPATH)) {
+	mkdir(LADDER_MIGRATIONPATH);
 }
 
 // Try to use unnamed arg if no name passed.
@@ -25,7 +25,7 @@ if (! preg_match('/[a-zA-Z0-9_-]/', $params['name'])) {
 // Calculate the new id.
 if (! Config::item('config.timestamp-ids')) {
 	// Calculate the next sequential migration id.
-	$files = glob(LADDER_APPPATH.'migrations/*.php');
+	$files = glob(LADDER_MIGRATIONPATH.'*.php');
 	sort($files);
 	list($migration_id) = explode('-', basename(end($files)));
 	$new_id = sprintf('%05d', 1 + (int) $migration_id);
@@ -41,7 +41,7 @@ $file_name = $new_id . '-' . $params['name'] . '.php';
 $migration_name = Migration::class_name($file_name);
 
 // Save the file and let the user know.
-$migration_file_path = LADDER_APPPATH.'migrations/'.$file_name;
+$migration_file_path = LADDER_MIGRATIONPATH.$file_name;
 file_put_contents($migration_file_path, template::migration($migration_name));
 echo 'Created ', $file_name, ".\n";
 
