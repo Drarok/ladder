@@ -63,7 +63,7 @@ final class Ladder {
 			),
 			'migration'
 		);
-		$migration_files = glob(LADDER_APPPATH.'migrations/*.php');
+		$migration_files = glob(LADDER_MIGRATIONPATH.'*.php');
 
 		echo "\n", ucfirst($method), sprintf('grading `%s` from %d to %s', $this->db->name, $current_migration, $migrate_target), "\n";
 

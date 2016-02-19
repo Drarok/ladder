@@ -355,7 +355,7 @@ class Table {
 		if ($migration === FALSE)
 			return;
 		
-		require_once(sprintf('migrations/data/%s-%s.php',
+		require_once(LADDER_MIGRATIONPATH.sprintf('data/%s-%s.php',
 			end(explode('_', get_class($migration))), strtolower($this->name)));
 	}
 
@@ -506,8 +506,8 @@ class Table {
 
 		// Loop over the file and add array elements.
 		while (! feof($csv)) {
-			// Skip errors, and blink lines. Returned as a single null element array.
-			if (! (bool) $row = fgetcsv($csv) OR $row == array(NULL)) {
+			// Skip errors, blank lines and comments. Returned as a single null element array.
+			if (! (bool) $row = fgetcsv($csv) OR $row == array(NULL) OR $row[0][0] == "#") {
 				continue;
 			}
 

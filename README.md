@@ -35,6 +35,16 @@ and run the ladder.php script: `php ladder.php`.
 If you don't see a list of valid commands, something has gone wrong. Sorry about
 that!
 
+To create a migration use `php ladder.php create mymigration`.
+Now edit the created migration file at _migrations/00001\_mymigration.php_ to specify
+the required actions for the migration.
+
+Next use `php ladder.php migrate` to migrate the database.
+
+Additionally, you can provide a migration number (or timestamp) to the migrate command
+in order to migrate to that specific point.
+The migrate command can be used to either migrate to a _newer_ or _older_ database scheme.
+
 ## Does it do *x* or *y*?
 
 I'd advise you to check the documentation, but unfortunately, you're reading it.
