@@ -21,7 +21,7 @@ class Table {
 		$res = $db->query(sprintf(
 			'SHOW TABLES LIKE \'%s\'', $db->escape_value($name)
 		));
-		return mysql_num_rows($res) == 1;
+		return mysqli_num_rows($res) == 1;
 	}
 
 	public function __construct($name, $created = NULL, $options = NULL) {
@@ -72,7 +72,7 @@ class Table {
 		$db = LadderDB::factory();
 		$cols = array();
 		$field_query = $db->query(sprintf('SHOW FULL COLUMNS FROM `%s`', $this->name));
-		while ($field_row = mysql_fetch_object($field_query)) {
+		while ($field_row = mysqli_fetch_object($field_query)) {
 			$cols[$field_row->Field] = $field_row;
 		}
 		return $this->table_columns = $cols;
@@ -91,7 +91,7 @@ class Table {
 		$index_query = $db->query(sprintf('SHOW INDEXES FROM `%s`', $this->name));
 		
 		$indexes = array();
-		while ($index_row = mysql_fetch_object($index_query)) {
+		while ($index_row = mysqli_fetch_object($index_query)) {
 			if (! array_key_exists($index_row->Key_name, $indexes)) {
 				$indexes[$index_row->Key_name] = array();
 			}
@@ -391,7 +391,7 @@ class Table {
 		));
 
 		// Build the function name to use.
-		$func = 'mysql_fetch_'.$fetch;
+		$func = 'mysqli_fetch_'.$fetch;
 
 		// Loop over the result set, saving to an array.
 		$result = array();
@@ -400,7 +400,7 @@ class Table {
 		}
 
 		// Free the result set.
-		mysql_free_result($query);
+		mysqli_free_result($query);
 
 		// Return the rows!
 		return $result;
@@ -643,7 +643,7 @@ class Table {
 		));
 		
 		// Get the value and return.
-		$row = mysql_fetch_row($query);
+		$row = mysqli_fetch_row($query);
 		return (int) $row[0];
 	}
 }

@@ -35,42 +35,34 @@ class LadderDB {
 			return;
 		}
 
-		// Grab the port, prefix with colon if it's set.
+		// Grab the port
 		if ((bool) $port = Config::item('database.port')) {
-			$port = ':'.$port;
-		}
-
-		// Initialise the options.
-		$parsed_options = 0;
-
-		// Check for options.
-		if ((bool) Config::item('database.compress')) {
-			$parsed_options |= MYSQL_CLIENT_COMPRESS;
+			$port = intval($port);
 		}
 
 		// Attempt to connect.
 		$host = Config::item('database.hostname').$port;
 		echo 'Connecting to ', $host, '... ';
-		$this->conn = mysql_connect(
+		$this->conn = mysqli_connect(
 			$host,
 			Config::item('database.username'),
 			Config::item('database.password'),
-			FALSE,
-			$parsed_options
+			$this->name,
+			$port
 		);
 
 		if (! (bool) $this->conn)
-			throw new Exception('Unable to connect to database at '.$host.' '.mysql_error());
+			throw new Exception('Unable to connect to database at '.$host.' '.mysqli_error($this->conn));
 
 		// Grab the version number from the server now we're connected.
 		$version = $this->query('SELECT @@version');
-		$version = mysql_fetch_row($version);
+		$version = mysqli_fetch_row($version);
 		$version = $version[0];
 
 		echo sprintf('Connected. Server version %s.', $version), PHP_EOL;
 
 		if ($this->database_id > -1) {
-			if (! mysql_select_db($this->name, $this->conn))
+			if (! mysqli_select_db($this->conn, $this->name))
 				throw new Exception('Invalid database: '.$this->name);
 		}
 
@@ -78,7 +70,7 @@ class LadderDB {
 	}
 
 	protected function disconnect() {
-		mysql_close($this->conn);
+		mysqli_close($this->conn);
 		$this->conn = FALSE;
 		hooks::run_hooks(hooks::DATABASE_DISCONNECT);
 	}
@@ -90,7 +82,7 @@ class LadderDB {
 
 	public function escape_value($value) {
 		$this->connect();
-		return mysql_real_escape_string($value, $this->conn);
+		return mysqli_real_escape_string($this->conn, $value);
 	}
 
 	public function query($sql, $show_sql = NULL) {
@@ -107,18 +99,18 @@ class LadderDB {
 			echo $sql, "\n";
 		}
 
-		$res = mysql_query($sql, $this->conn);
+		$res = mysqli_query($this->conn, $sql);
 
 		if (! (bool) $res) {
-			$error = mysql_error($this->conn);
+			$error = mysqli_error($this->conn);
 
 			$warnings = array();
 
 			// See if we need to ask for warnings information.
 			if (strpos($error, 'Check warnings') !== FALSE) {
-				$warn_query = mysql_query('SHOW WARNINGS', $this->conn);
+				$warn_query = mysqli_query($this->conn, 'SHOW WARNINGS');
 
-				while ((bool) $warn_row = mysql_fetch_object($warn_query)) {
+				while ((bool) $warn_row = mysqli_fetch_object($warn_query)) {
 					$warnings[] = $warn_row->Level.' - '.$warn_row->Message;
 				}
 			}
@@ -130,7 +122,7 @@ class LadderDB {
 	}
 
 	public function insert_id() {
-		return mysql_insert_id($this->conn);
+		return mysqli_insert_id($this->conn);
 	}
 
 	public function next_database($output = TRUE) {
@@ -143,7 +135,7 @@ class LadderDB {
 		++$this->database_id;
 
 		if ($this->database_id < count($this->databases)) {
-			if (! mysql_select_db($this->name, $this->conn))
+			if (! mysqli_select_db($this->conn, $this->name))
 				throw new Exception('Invalid database: '.$this->name);
 
 			if ((bool) $output) {
@@ -249,7 +241,7 @@ class LadderDB {
 			.$this->get_migrations_table().'`',
 			FALSE
 		);
-		$migration_result = mysql_fetch_object($migration_query);
+		$migration_result = mysqli_fetch_object($migration_query);
 		return (int) $migration_result->migration;
 	}
 
@@ -264,7 +256,7 @@ class LadderDB {
 		$result = array();
 
 		// Loop over each row.
-		while ($row = mysql_fetch_object($query)) {
+		while ($row = mysqli_fetch_object($query)) {
 			$result[] = (int) $row->migration;
 		}
 
@@ -277,7 +269,7 @@ class LadderDB {
 			$this->get_migrations_table(), (int) $id
 		));
 
-		return mysql_num_rows($query) == 1;
+		return mysqli_num_rows($query) == 1;
 	}
 
 	/**
@@ -312,7 +304,7 @@ class LadderDB {
 		);
 
 		$tables = array();
-		while ((bool) $row = mysql_fetch_row($query)) {
+		while ((bool) $row = mysqli_fetch_row($query)) {
 			if (in_array($row[0], $system_tables)) {
 				continue;
 			}
