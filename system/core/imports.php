@@ -3,6 +3,8 @@
 $imports = array(
 	'classes' => array(
 		'ladderdb',
+		'ladderdb_mysql',
+		'ladderdb_mysqli',
 		'grant_manager',
 		'ladder',
 		'migration',

@@ -1,25 +1,27 @@
 <?php
 
-class LadderDB {
+abstract class LadderDB {
+	const TYPE_MYSQL = 'MySQL';
+	const TYPE_MYSQLI = 'MySQLi';
+
+	protected static $instance;
+
 	protected $conn;
 	protected $databases;
 	protected $database_id;
 
-	protected static $instance;
-
 	public static function factory() {
 		if (! (bool) self::$instance) {
-			new LadderDB;
+			$class = 'LadderDB_'.Config::item('database.type');
+			self::$instance = new $class();
 		}
 
 		return self::$instance;
 	}
 
-	public function __construct() {
-		if (! self::$instance) {
-			self::$instance = $this;
-		}
+	abstract protected function _connect($host, $port, $username, $password);
 
+	public function __construct() {
 		$this->database_id = -1;
 	}
 
@@ -34,6 +36,18 @@ class LadderDB {
 		if ((bool) $this->conn) {
 			return;
 		}
+
+		$host = Config::item('database.hostname');
+
+		if ((bool) $port = Config::item('database.port')) {
+			$port = intval($port);
+		}
+
+		$username = Config::item('database.username');
+		$password = Config::item('database.password');
+
+
+		return $this->conn = $this->_connect($host, $port, $username, $password);
 
 		// Grab the port
 		if ((bool) $port = Config::item('database.port')) {
