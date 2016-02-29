@@ -409,11 +409,18 @@ class sql {
 	 * @param string $join Glue to use between field-value pairs.
 	 * @param boolean $compare Sets comparison mode, where ' = NULL'
 	 * becomes 'IS NULL'. @since 0.4.12.
+	 * @param boolean $allowIndex When true arrays with indices are allowed
+	 * (instead of field-value pairs)
 	 */
-	protected static function set_data($data, $join = ', ', $compare = FALSE) {
+	protected static function set_data($data, $join = ', ', $compare = FALSE, $allowIndex = false) {
+		if(!is_array($data)) {
+			throw new Exception('$data is not an array');
+		}
 		$values = array();
 		foreach ($data as $field => $value) {
-			if ((bool) $compare AND $value === NULL) {
+			if ($allowIndex && is_int($field)) {
+				$values[] = sprintf('%s', $value);
+			} elseif ((bool) $compare AND $value === NULL) {
 				// Handle NULLs as a comparison.
 				$values[] = sprintf('%s IS NULL', self::escape($field, '`'));
 			} else {
@@ -448,10 +455,15 @@ class sql {
 		));
 	}
 
+	/**
+	 * Deletes data from a table
+	 * @param string $name Name of table
+	 * @param array $where Array containing field-value pairs and/or 'regular' values.
+	 */
 	public static function delete($name, $where) {
 		self::$db->query(sprintf(
 			'DELETE FROM `%s` WHERE %s', $name,
-			self::set_data($where, ' AND ', TRUE)
+			self::set_data($where, ' AND ', TRUE, TRUE)
 		));
 	}
 
