@@ -413,13 +413,13 @@ class sql {
 	 * (instead of field-value pairs)
 	 */
 	protected static function set_data($data, $join = ', ', $compare = FALSE, $allowIndex = false) {
-		if(!is_array($data)) {
+		if (!is_array($data)) {
 			throw new Exception('$data is not an array');
 		}
 		$values = array();
 		foreach ($data as $field => $value) {
 			if ($allowIndex && is_int($field)) {
-				$values[] = sprintf('%s', $value);
+				$values[] = $value;
 			} elseif ((bool) $compare AND $value === NULL) {
 				// Handle NULLs as a comparison.
 				$values[] = sprintf('%s IS NULL', self::escape($field, '`'));
