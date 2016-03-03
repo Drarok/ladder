@@ -461,7 +461,12 @@ class Table {
 		sql::update($this->name, $data, $where);
 		return $this;
 	}
-	
+
+	/**
+	 * Deletes data from table
+	 * @param array $where Array containing field-value pairs and/or regular values
+	 * @return The table
+	 */
 	public function delete($where) {
 		$this->execute();
 		sql::delete($this->name, $where);
