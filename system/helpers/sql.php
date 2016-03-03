@@ -59,9 +59,7 @@ class sql {
 			$commands[] = substr(self::add_constraint(FALSE, $constraint), 3);
 		}
 
-		/**
-		 * Parse the options array into a fresh array.
-		 */
+		// Parse the options array into a fresh array.
 		$options_parsed = array();
 		foreach ($options as $opt_key => $opt_value) {
 			$options_parsed[] = sprintf('%s=%s', strtoupper($opt_key), $opt_value);
@@ -322,9 +320,10 @@ class sql {
 	}
 
 	/**
-	 * Return current default options for a given field type, or all current
-	 * defaults if no field type passed.
-	 * @param mixed $field_type[optional] Name of the type, or NULL to return all.
+	 * Get default options for a given field type, or all defaults if no field type passed.
+	 *
+	 * @param string|null $field_type Name of the type, or null to return all.
+	 *
 	 * @return array Associative array of info, or associative array of type => info.
 	 */
 	public static function get_default($field_type = NULL) {
@@ -403,29 +402,31 @@ class sql {
 	}
 
 	/**
-	 * Build a string from a field => value associative array that can be used
-	 * in a SET or WHERE clause.
-	 * @param array $data Field to value associative array.
-	 * @param string $join Glue to use between field-value pairs.
-	 * @param boolean $compare Sets comparison mode, where ' = NULL'
-	 * becomes 'IS NULL'. @since 0.4.12.
-	 * @param boolean $allowIndex When true arrays with indices are allowed
-	 * (instead of field-value pairs)
+	 * Build a SQL string from a field => value and/or indexed array of SQL
+	 * strings that can be used for SET or WHERE.
+	 *
+	 * @param array   $data    Array of field => value and/or indexed SQL strings.
+	 * @param string  $join    Glue to use between field-value pairs.
+	 * @param boolean $compare Sets comparison mode, where '= NULL' becomes 'IS NULL'. @since 0.4.12.
+	 *
+	 * @return string
 	 */
-	protected static function set_data($data, $join = ', ', $compare = FALSE, $allowIndex = false) {
+	protected static function set_data($data, $join = ', ', $compare = FALSE) {
 		if (!is_array($data)) {
-			throw new Exception('$data is not an array');
+			throw new Exception('First parameter to set_data must be an array.');
 		}
+
 		$values = array();
 		foreach ($data as $field => $value) {
-			if ($allowIndex && is_int($field)) {
+			if (is_int($field)) {
+				// Support plain SQL if indexed array.
 				$values[] = $value;
 			} elseif ((bool) $compare AND $value === NULL) {
 				// Handle NULLs as a comparison.
 				$values[] = sprintf('%s IS NULL', self::escape($field, '`'));
 			} else {
-				// SET style.
-				$values[] = sprintf('%s = %s', self::escape($field, '`'), self::escape($value));
+				// Fall back to field = value.
+				$values[] = sprintf('%s = %s', self::escape_identifier($field), self::escape($value));
 			}
 		}
 
@@ -442,6 +443,15 @@ class sql {
 		return self::$db->insert_id();
 	}
 
+	/**
+	 * Updates data in a table.
+	 *
+	 * @param string $name  Name of table
+	 * @param array  $data  Array of field => value data to update.
+	 * @param mixed  $where array: Array of field => value and/or indexed SQL string.
+	 *                      bool: Pass true to update all rows.
+	 *                      string: Raw SQL string to use as WHERE clause.
+	 */
 	public static function update($name, $data, $where) {
 		if (is_array($where)) {
 			$where = self::set_data($where, ' AND ', TRUE);
@@ -457,16 +467,22 @@ class sql {
 
 	/**
 	 * Deletes data from a table
-	 * @param string $name Name of table
-	 * @param array $where Array containing field-value pairs and/or 'regular' values.
+	 *
+	 * @param string $name  Name of table
+	 * @param array  $where Array containing field => value pairs and/or SQL strings.
 	 */
 	public static function delete($name, $where) {
 		self::$db->query(sprintf(
 			'DELETE FROM `%s` WHERE %s', $name,
-			self::set_data($where, ' AND ', TRUE, TRUE)
+			self::set_data($where, ' AND ', TRUE)
 		));
 	}
 
+	/**
+	 * Truncate a table by name.
+	 *
+	 * @param string $name Name of table.
+	 */
 	public static function truncate($name) {
 		self::$db->query(sprintf('TRUNCATE TABLE `%s`', $name));
 	}
