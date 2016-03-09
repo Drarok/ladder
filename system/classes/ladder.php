@@ -148,22 +148,22 @@ final class Ladder {
 
 		if ((bool) $field AND $value === FALSE) {
 			// Single-value indexed array
-			while ($row = mysqli_fetch_object($res))
+			while ($row = $res->fetch_object())
 				$rows[] = $row->$field;
 			return $rows;
 		} elseif ((bool) $field AND (bool) $value) {
 			// name => value pairing
-			while ($row = mysqli_fetch_object($res))
+			while ($row = $res->fetch_object())
 				$rows[$row->$field] = $row->$value;
 			return $rows;
 		} elseif (! (bool) $field AND (bool) $value) {
 			// value => row pairing (id => object)
-			while ($row = mysqli_fetch_object($res))
+			while ($row = $res->fetch_object())
 				$rows[$row->$value] = $row;
 			return $rows;
 		} else {
 			// Straight array.
-			while ($row = mysqli_fetch_object($res))
+			while ($row = $res->fetch_object())
 				$rows[] = $row;
 			return $rows;
 		}

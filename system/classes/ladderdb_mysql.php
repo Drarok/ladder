@@ -1,19 +1,23 @@
 <?php
 
-class LadderDB_MySQLi extends LadderDB {
+class LadderDB_MySQL extends LadderDB {
 	public function escape_value($value) {
-		return mysqli_real_escape_string($this->connect(), $value);
+		return mysql_real_escape_string($value, $this->connect());
 	}
 
 	public function insert_id() {
-		return mysqli_insert_id($this->connect());
+		return mysql_insert_id($this->connect());
 	}
 
 	protected function _connect($host, $port, $username, $password) {
-		$conn = mysqli_connect($host, $username, $password, $this->name, $port);
+		if ($port) {
+			$host .= ':' . $port;
+		}
+
+		$conn = mysql_connect($host, $username, $password);
 
 		if (! (bool) $conn) {
-			throw new Exception('Unable to connect to database at '.$host.' '.mysqli_error($this->conn));
+			throw new Exception('Unable to connect to database at '.$host.' '.mysql_error());
 		}
 
 		return $conn;
@@ -21,25 +25,25 @@ class LadderDB_MySQLi extends LadderDB {
 
 	protected function _disconnect() {
 		if ($this->conn) {
-			mysqli_close($this->conn);
+			mysql_close($this->conn);
 		}
 	}
 
 	protected function _query($sql) {
 		$conn = $this->connect();
 
-		$res = mysqli_query($conn, $sql);
+		$res = mysql_query($sql, $conn);
 
 		if (! (bool) $res) {
-			$error = mysqli_error($conn);
+			$error = mysql_error($conn);
 
 			$warnings = array();
 
 			// See if we need to ask for warnings information.
 			if (strpos($error, 'Check warnings') !== FALSE) {
-				$warn_query = mysqli_query($conn, 'SHOW WARNINGS');
+				$warn_query = mysql_query('SHOW WARNINGS', $conn);
 
-				while ($warn_row = mysqli_fetch_object($warn_query)) {
+				while ($warn_row = mysql_fetch_object($warn_query)) {
 					$warnings[] = $warn_row->Level.' - '.$warn_row->Message;
 				}
 			}
@@ -49,12 +53,12 @@ class LadderDB_MySQLi extends LadderDB {
 			if (is_bool($res)) {
 				return $res;
 			} else {
-				return new LadderDB_Result_MySQLi($res);
+				return new LadderDB_Result_MySQL($res);
 			}
 		}
 	}
 
 	protected function _select_db($name) {
-		return mysqli_select_db($this->connect(), $name);
+		return mysql_select_db($name, $this->connect());
 	}
 }

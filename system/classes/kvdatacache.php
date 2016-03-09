@@ -86,12 +86,12 @@ class KVDataCache {
 			$this->db->get_kvdata_table(), (int) $id
 		), KVCACHE_DEBUG);
 		
-		if (! (bool) mysqli_num_rows($result)) {
+		if (! (bool) $result->num_rows()) {
 			// There was no data, so bail out.
 			return FALSE;
 		} else {
 			$data = array();
-			while ($row = mysqli_fetch_object($result)) {
+			while ($row = $result->fetch_object()) {
 				$data[$row->key] = unserialize($row->value);
 			}
 			$this->cache[$id] = $data;
