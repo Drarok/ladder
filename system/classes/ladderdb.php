@@ -12,7 +12,15 @@ abstract class LadderDB {
 
 	public static function factory() {
 		if (! (bool) self::$instance) {
-			$class = 'LadderDB_'.Config::item('database.type');
+			$type = Config::item('database.type');
+			if ($type === FALSE) {
+				throw new Exception(
+					'Missing required config item: \'database.type\'. Valid constants: ' .
+					'LadderDB::TYPE_MYSQLI or LadderDB::TYPE_MYSQL'
+				);
+			}
+
+			$class = 'LadderDB_'.$type;
 			self::$instance = new $class();
 		}
 
