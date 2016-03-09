@@ -1,25 +1,40 @@
 <?php
 
-class LadderDB {
+abstract class LadderDB {
+	const TYPE_MYSQL = 'MySQL';
+	const TYPE_MYSQLI = 'MySQLi';
+
+	protected static $instance;
+
 	protected $conn;
 	protected $databases;
 	protected $database_id;
 
-	protected static $instance;
-
 	public static function factory() {
 		if (! (bool) self::$instance) {
-			new LadderDB;
+			$type = Config::item('database.type');
+			if ($type === FALSE) {
+				throw new Exception(
+					'Missing required config item: \'database.type\'. Valid constants: ' .
+					'LadderDB::TYPE_MYSQLI or LadderDB::TYPE_MYSQL'
+				);
+			}
+
+			$class = 'LadderDB_'.$type;
+			self::$instance = new $class();
 		}
 
 		return self::$instance;
 	}
 
-	public function __construct() {
-		if (! self::$instance) {
-			self::$instance = $this;
-		}
+	abstract public function escape_value($value);
+	abstract public function insert_id();
+	abstract protected function _connect($host, $port, $username, $password);
+	abstract protected function _disconnect();
+	abstract protected function _query($sql);
+	abstract protected function _select_db($name);
 
+	public function __construct() {
 		$this->database_id = -1;
 	}
 
@@ -30,47 +45,32 @@ class LadderDB {
 	}
 
 	protected function connect() {
-		// No need to connect again if we have a resource.
+		// No need to connect again.
 		if ((bool) $this->conn) {
-			return;
+			return $this->conn;
 		}
 
-		// Grab the port, prefix with colon if it's set.
+		$host = Config::item('database.hostname');
+
 		if ((bool) $port = Config::item('database.port')) {
-			$port = ':'.$port;
+			$port = intval($port);
 		}
 
-		// Initialise the options.
-		$parsed_options = 0;
+		$username = Config::item('database.username');
+		$password = Config::item('database.password');
 
-		// Check for options.
-		if ((bool) Config::item('database.compress')) {
-			$parsed_options |= MYSQL_CLIENT_COMPRESS;
-		}
-
-		// Attempt to connect.
-		$host = Config::item('database.hostname').$port;
 		echo 'Connecting to ', $host, '... ';
-		$this->conn = mysql_connect(
-			$host,
-			Config::item('database.username'),
-			Config::item('database.password'),
-			FALSE,
-			$parsed_options
-		);
-
-		if (! (bool) $this->conn)
-			throw new Exception('Unable to connect to database at '.$host.' '.mysql_error());
+		$this->conn = $this->_connect($host, $port, $username, $password);
 
 		// Grab the version number from the server now we're connected.
 		$version = $this->query('SELECT @@version');
-		$version = mysql_fetch_row($version);
+		$version = $version->fetch_row();
 		$version = $version[0];
 
 		echo sprintf('Connected. Server version %s.', $version), PHP_EOL;
 
 		if ($this->database_id > -1) {
-			if (! mysql_select_db($this->name, $this->conn))
+			if (! $this->select_db($this->name))
 				throw new Exception('Invalid database: '.$this->name);
 		}
 
@@ -78,7 +78,7 @@ class LadderDB {
 	}
 
 	protected function disconnect() {
-		mysql_close($this->conn);
+		$this->_disconnect();
 		$this->conn = FALSE;
 		hooks::run_hooks(hooks::DATABASE_DISCONNECT);
 	}
@@ -86,51 +86,6 @@ class LadderDB {
 	public function reconnect() {
 		$this->disconnect();
 		$this->connect();
-	}
-
-	public function escape_value($value) {
-		$this->connect();
-		return mysql_real_escape_string($value, $this->conn);
-	}
-
-	public function query($sql, $show_sql = NULL) {
-		$this->connect();
-
-		// If nothing passed, use params to set option.
-		if ($show_sql === NULL) {
-			global $params;
-			$show_sql = $params['show-sql'];
-		}
-
-		// Should we show this SQL?
-		if ($show_sql) {
-			echo $sql, "\n";
-		}
-
-		$res = mysql_query($sql, $this->conn);
-
-		if (! (bool) $res) {
-			$error = mysql_error($this->conn);
-
-			$warnings = array();
-
-			// See if we need to ask for warnings information.
-			if (strpos($error, 'Check warnings') !== FALSE) {
-				$warn_query = mysql_query('SHOW WARNINGS', $this->conn);
-
-				while ((bool) $warn_row = mysql_fetch_object($warn_query)) {
-					$warnings[] = $warn_row->Level.' - '.$warn_row->Message;
-				}
-			}
-
-			throw new Exception($error.' '.implode(', ', $warnings));
-		} else {
-			return $res;
-		}
-	}
-
-	public function insert_id() {
-		return mysql_insert_id($this->conn);
 	}
 
 	public function next_database($output = TRUE) {
@@ -143,8 +98,9 @@ class LadderDB {
 		++$this->database_id;
 
 		if ($this->database_id < count($this->databases)) {
-			if (! mysql_select_db($this->name, $this->conn))
+			if (! $this->_select_db($this->name)) {
 				throw new Exception('Invalid database: '.$this->name);
+			}
 
 			if ((bool) $output) {
 				echo $this->name, '... ', "\n";
@@ -156,6 +112,21 @@ class LadderDB {
 		} else {
 			return FALSE;
 		};
+	}
+
+	public function query($sql, $show_sql = NULL) {
+		// If nothing passed, use params to set option.
+		if ($show_sql === NULL) {
+			global $params;
+			$show_sql = $params['show-sql'];
+		}
+
+		// Should we show this SQL?
+		if ($show_sql) {
+			echo $sql, PHP_EOL;
+		}
+
+		return $this->_query($sql);
 	}
 
 	public function get_migrations_table() {
@@ -245,18 +216,20 @@ class LadderDB {
 	public function get_current_migration() {
 		// Find what the maximum migration is...
 		$migration_query = $this->query(
-			'SELECT MAX(`migration`) AS `migration` FROM `'
-			.$this->get_migrations_table().'`',
+			sprintf(
+				'SELECT MAX(`migration`) AS `migration` FROM `%s`',
+				$this->get_migrations_table()
+			),
 			FALSE
 		);
-		$migration_result = mysql_fetch_object($migration_query);
+		$migration_result = $migration_query->fetch_object();
 		return (int) $migration_result->migration;
 	}
 
 	public function get_migrations() {
 		// Query the table.
 		$query = $this->query(sprintf(
-			'SELECT `migration`  FROM `%s` ORDER BY `migration`',
+			'SELECT `migration` FROM `%s` ORDER BY `migration`',
 			$this->get_migrations_table()
 		));
 
@@ -264,7 +237,7 @@ class LadderDB {
 		$result = array();
 
 		// Loop over each row.
-		while ($row = mysql_fetch_object($query)) {
+		while ($row = $query->fetch_object()) {
 			$result[] = (int) $row->migration;
 		}
 
@@ -277,7 +250,7 @@ class LadderDB {
 			$this->get_migrations_table(), (int) $id
 		));
 
-		return mysql_num_rows($query) == 1;
+		return $query->num_rows() == 1;
 	}
 
 	/**
@@ -285,14 +258,14 @@ class LadderDB {
 	 * @param integer $migration The migration id to remove.
 	 */
 	public function remove_migration($id) {
-		$query = $this->query(sprintf(
+		$this->query(sprintf(
 			'DELETE FROM `%s` WHERE `migration` = %d',
 			$this->get_migrations_table(), (int) $id
 		));
 	}
 
 	public function add_migration($id) {
-		$query = $this->query(sprintf(
+		$this->query(sprintf(
 			'INSERT INTO `%s` (`migration`, `applied`) VALUES (%d, NOW())',
 			$this->get_migrations_table(), (int) $id
 		));
@@ -312,7 +285,7 @@ class LadderDB {
 		);
 
 		$tables = array();
-		while ((bool) $row = mysql_fetch_row($query)) {
+		while ($row = $query->fetch_row()) {
 			if (in_array($row[0], $system_tables)) {
 				continue;
 			}

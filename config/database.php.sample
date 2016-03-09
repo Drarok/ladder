@@ -1,6 +1,9 @@
 <?php
 
 $config['default'] = array(
+	// Valid options are 'LadderDB::TYPE_MYSQL' and 'LadderDB::TYPE_MYSQLI'.
+	'type'		=> LadderDB::TYPE_MYSQLI,
+
 	// Just the hostname. IP address or DNS name is ok.
 	'hostname'	=> 'localhost',
 
@@ -13,9 +16,6 @@ $config['default'] = array(
 
 	// A database, or array of databases to apply migrations to.
 	'database'	=> 'sc_master',
-
-	// Optional. Use a compressed connection?
-	// 'compress' => TRUE,
 
 	// Optional. You can change the name of the migrations table.
 	// 'migrations_table' => 'migrations',
